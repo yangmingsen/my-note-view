@@ -1,0 +1,24 @@
+{
+  "name": "my-note-view",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@kangc/v-md-editor": "^2.3.18",
+    "ant-design-vue": "^4.2.3",
+    "axios": "^1.7.3",
+    "pinia": "^2.2.0",
+    "qs": "^6.13.0",
+    "vue": "^3.4.29",
+    "vue3-menus": "^1.1.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "vite": "^5.3.1"
+  }
+}
