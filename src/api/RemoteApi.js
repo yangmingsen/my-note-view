@@ -16,6 +16,15 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-index/antTree", params)
     },
 
+    /**
+     * 面包线接口
+     * @param params {id: xxxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async findBreadcrumb(params) {
+        return await request.get(rurl+"/note-index/findBreadcrumb", params)
+    },
+
 
     /**
      * 获取子目录数据(目录和文件)
@@ -78,6 +87,10 @@ export const RemoteApi = {
         return await request.post(rurl+"/note-data/addAndUpdate", params);
     },
 
+    noteContentAddAndUpdateSync(params) {
+        return request.post(rurl+"/note-data/addAndUpdate", params);
+    },
+
     /**
      * 获取笔记内容
      * @param params
@@ -87,6 +100,15 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-data/get", params);
     },
 
+
+    /**
+     * 获取笔记信息和存储信息(有存储在mongo的url等..)
+     * @param params {id: xxxxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async getNoteAndSite(params) {
+        return await request.get(rurl+"/note-index/getNoteAndSite", params);
+    },
 
 
 }

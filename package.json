@@ -10,11 +10,16 @@
   },
   "dependencies": {
     "@kangc/v-md-editor": "^2.3.18",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "ant-design-vue": "^4.2.3",
     "axios": "^1.7.3",
     "pinia": "^2.2.0",
     "qs": "^6.13.0",
+    "v-viewer": "^3.0.11",
+    "viewerjs": "^1.11.6",
     "vue": "^3.4.29",
+    "vue-pdf-embed": "^2.1.0",
     "vue3-menus": "^1.1.2"
   },
   "devDependencies": {

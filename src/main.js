@@ -24,11 +24,17 @@ VueMarkdownEditor.use(vuepressTheme, {
 });
 
 
+//----v-viewer 图片浏览组件
+import 'viewerjs/dist/viewer.css'
+import VueViewer from 'v-viewer'
+
+
 const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
 app.use(Antd)
 app.use(Menus)
-app.use(VueMarkdownEditor);
+app.use(VueMarkdownEditor)
+app.use(VueViewer)
 app.mount('#app')
