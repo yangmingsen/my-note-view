@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@kangc/v-md-editor": "^2.3.18",
+    "@vue-office/docx": "^1.6.2",
+    "@vue-office/excel": "^1.7.11",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "ant-design-vue": "^4.2.3",
@@ -19,6 +21,7 @@
     "v-viewer": "^3.0.11",
     "viewerjs": "^1.11.6",
     "vue": "^3.4.29",
+    "vue-demi": "^0.14.10",
     "vue-pdf-embed": "^2.1.0",
     "vue3-menus": "^1.1.2"
   },

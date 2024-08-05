@@ -6,20 +6,23 @@ import WangEditor from './components/WangEditor.vue'
 import NotSupportEditor from './components/NotSupportEditor.vue'
 import ImageViewer from './components/ImageViewer.vue'
 import PdfViewer from './components/PdfViewer.vue'
+import WordViewer from './components/WordViewer.vue'
+import ExcelViewer from './components/ExcelViewer.vue'
 import {ref} from 'vue'
 
 const mdNoteId = ref('')
 const werNoteId = ref ('')
 const imgNoteId = ref('')
 const pdfNoteId = ref('')
+const wordNoteId = ref('')
+const excelNoteId = ref('')
 
 const editorFlag = {
   markdwon: 0, wangEditor: 1,  blank: 2, notSupport: 3, img: 4,
-  pdf: 5
+  pdf: 5, doc: 6, excel: 7
 }
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
-
 
 const chooseEditor = (info) => {
   if (info.isile == '0') {
@@ -40,6 +43,12 @@ const chooseEditor = (info) => {
     } else if(info.type == 'pdf') {
       pdfNoteId.value = info.id
       editorSelected.value = editorFlag.pdf
+    } else if (info.type == 'doc' || info.type == 'docx') {
+      wordNoteId.value = info.id
+      editorSelected.value = editorFlag.doc
+    } else if (info.type == 'xls' || info.type == 'xlsx') {
+      excelNoteId.value = info.id
+      editorSelected.value = editorFlag.excel
     }
     else {
       editorSelected.value = editorFlag.notSupport
@@ -76,6 +85,12 @@ const chooseEditor = (info) => {
           :noteid="pdfNoteId"
           v-if="editorSelected == editorFlag.pdf">
       </PdfViewer>
+      <WordViewer
+          :noteid="wordNoteId"
+          v-if="editorSelected == editorFlag.doc"></WordViewer>
+      <ExcelViewer
+          :noteid="excelNoteId"
+          v-if="editorSelected == editorFlag.excel"></ExcelViewer>
       <NotSupportEditor v-if="editorSelected == editorFlag.notSupport"></NotSupportEditor>
     </div>
   </div>
