@@ -12,6 +12,11 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-index/tree", params)
     },
 
+    /**
+     * 获取Ant组件tree树 数据
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
     async getAntNoteTree(params) {
         return await request.get(rurl+"/note-index/antTree", params)
     },
@@ -59,6 +64,41 @@ export const RemoteApi = {
      */
     async delNote(params) {
         return await request.post(rurl+"/note-index/delNote", params);
+    },
+
+    /**
+     * 物理删除
+     * @param params {id: xxxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async destroyNote(params) {
+        return await request.get(rurl+"/note-index/destroyNote", params);
+    },
+
+    /**
+     * 获取最近10个修改的文件
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async getRecentFiles(params) {
+        return await request.get(rurl+"/note-index/getRecentFiles", params);
+    },
+
+    /**
+     * 获取删除的列表，按删除时间排序
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async getDeletedFiles(params) {
+        return await request.get(rurl+"/note-index/getDeletedFiles", params);
+    },
+
+    async allDestroy(params) {
+        return await request.get(rurl+"/note-index/allDestroy", params);
+    },
+
+    async allRecover(params) {
+        return await request.get(rurl+"/note-index/allRecover", params);
     },
 
 
@@ -110,5 +150,14 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-index/getNoteAndSite", params);
     },
 
+
+    /**
+     * 查看当前笔记内容是否可预览
+     * @param params {id: xxxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async noteContentCanPreview(params) {
+        return await request.get(rurl+"/note-data/checkFileCanPreview", params);
+    },
 
 }

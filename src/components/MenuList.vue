@@ -1,18 +1,32 @@
 <template>
-  <div class="avtar">
-    <img src="../assets/avtar.png">
-  </div>
-  <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>
-  <div class="new-content">+  新文档</div>
-  <div class="dir-list">
-    <a-tree
-        class="draggable-tree"
-        draggable
-        block-node
-        :tree-data="treeData"
-        @rightClick="rightClick"
-        @select="clickKey"
-    />
+  <div class="menu-list">
+    <div class="avtar">
+      <img src="../assets/avtar.png">
+    </div>
+    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>
+    <div class="new-content">+  新文档</div>
+    <div class="item-li"
+         @click="clickManualItem({id: itemList.rencentFiles})"
+         :class="itemSelected === itemList.rencentFiles ? 'item-active' : ''"
+    >
+      <span><HistoryOutlined /> &nbsp;&nbsp;最新文档</span>
+    </div>
+    <div class="item-li"
+         @click="clickManualItem({id: itemList.delFiles})"
+         :class="itemSelected === itemList.delFiles ? 'item-active' : ''"
+    >
+      <span><DeleteOutlined /> &nbsp;&nbsp;最近删除</span>
+    </div>
+    <div class="dir-list">
+      <a-tree
+          class="draggable-tree"
+          draggable
+          block-node
+          :tree-data="treeData"
+          @rightClick="rightClick"
+          @select="clickKey"
+      />
+    </div>
   </div>
 
 </template>
@@ -21,9 +35,28 @@
 import { ref, shallowRef,createVNode  } from 'vue';
 import { menusEvent } from 'vue3-menus';
 import { message, Modal  } from 'ant-design-vue';
-import { PlusCircleOutlined } from '@ant-design/icons-vue';
+import { PlusCircleOutlined, DeleteOutlined,HistoryOutlined } from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
+import {useItemSelectStore} from "../store/useItemSelectStore";
+import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
+
+const itemSelectStore = useItemSelectStore();
+const itemSelected = ref(-1)
+const itemList = constFlag.itemList
+const clickManualItem = (info) => {
+  const itemId = info.id
+  if (itemSelected.value !== itemId) {
+    itemSelected.value = itemId
+
+    //通知文件列表组件更新
+    itemSelectStore.$patch((state) => {
+      state.itemSelectKey = itemId
+    })
+
+  }
+}
+
 
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
@@ -106,7 +139,7 @@ const showInputModalConfirm = (info) => {
   });
 }
 
-
+//重新加载tree树及通知文件列表组件更新
 const reloadDirAndFileList = (info) => {
   const nid = info.nid;
   //重新加载目录树
@@ -132,7 +165,12 @@ const reloadDirAndFileList = (info) => {
 const selectStore = useSelectStore();
 let curSelectKey = ''; //当前目录选中的key(也就是上次选中的目录)
 const clickKey = (key) => {
+  //更新当前选中的treeid, 也就是父目录id
   curSelectKey = key[0];
+
+  //更新选中的item项
+  clickManualItem({id: itemList.treeFiles})
+
   //更新当前选中的目录Key
   selectStore.$patch((state) => {
     state.dirSelectKey = curSelectKey;
@@ -151,6 +189,10 @@ selectStore.$subscribe((mutation, state) =>{
 
 //鼠标右击tree情况
 const rightClick = info => {
+  //更新选中的item项
+  clickManualItem({id: itemList.treeFiles})
+
+  //鼠标右击事件
   const dObj = {title: info.node.title, key: info.node.key}
   menusEvent(info.event, menus.value, dObj);
 }
@@ -284,6 +326,11 @@ const menus = shallowRef({
 </script>
 
 <style scoped>
+
+.menu-list {
+
+}
+
 .avtar {
   height: 80px;
   width: 80px;
@@ -341,6 +388,19 @@ const menus = shallowRef({
 }
 .new-content:hover {
   background-color: #445E97;
+}
+
+.item-li {
+  cursor: default;
+  margin-bottom: 9px;
+}
+
+.item-li:hover {
+  background-color: #E8F0FF;
+}
+
+.item-active {
+  background-color: #D2E2FF;
 }
 
 .dir-list {

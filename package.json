@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@kangc/v-md-editor": "^2.3.18",
+    "@tinymce/tinymce-vue": "^5.1.1",
     "@vue-office/docx": "^1.6.2",
     "@vue-office/excel": "^1.7.11",
     "@wangeditor/editor": "^5.1.23",

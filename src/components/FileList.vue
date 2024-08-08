@@ -1,106 +1,168 @@
 <template>
-  <div class="f-search">
-    <img @click="backParentDir" src="../assets/回车按钮.png">
-    <div class="search-content">
-      <input type="text" value="搜索...">
+  <div class="files-scope">
+    <div class="f-search">
+      <img @click="backParentDir" src="../assets/回车按钮.png">
+      <div class="search-content">
+        <input type="text" value="搜索...">
+      </div>
+      <img @click.left="filterClick($event)" src="../assets/filter.png">
     </div>
-    <img @click.left="filterClick($event)" src="../assets/filter.png">
-  </div>
-  <div class="file-items" @contextmenu="spaceClick($event)">
-    <div class="item-space">
+    <div class="file-items" @contextmenu="spaceClick($event)">
       <p v-for="item in fileListData"
-         :class="item.id == fileSelectKey ? 'active' : ''"
+         :class="item.id === fileSelectKey ? 'active' : ''"
          @click="oneceClick($emit, item)"
          @dblclick="doubleClick(item)"
          @contextmenu="itemClick($event, item)"
       >
-        <span v-if="item.isile == 0"><FolderOutlined /></span>
-        <span v-else-if="item.type=='md'"><FileMarkdownOutlined /></span>
-        <span v-else-if="item.type=='wer'"><FileOutlined /></span>
-        <span v-else-if="item.type=='xls' || item.type=='xlsx'"><FileExcelOutlined /></span>
-        <span v-else-if="item.type=='doc' || item.type=='docx'"><FileWordOutlined /></span>
-        <span v-else-if="item.type=='ppt' || item.type=='pptx'"><FilePptOutlined /></span>
-        <span v-else-if="item.type=='jpg' || item.type=='jpeg'"><FileJpgOutlined /></span>
-        <span v-else-if="item.type=='png'"><FileImageOutlined /></span>
-        <span v-else-if="item.type=='zip'"><FileZipOutlined /></span>
-        <span v-else-if="item.type=='pdf'"><FilePdfOutlined /></span>
-        <span v-else><FileUnknownOutlined /></span>
-        <span class="item-name">{{item.name}}</span>
+        <span v-if="item.isile === '0'"><FolderOutlined/></span>
+        <span v-else-if="item.type==='md'"><FileMarkdownOutlined/></span>
+        <span v-else-if="item.type==='wer'"><FileOutlined/></span>
+        <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelOutlined/></span>
+        <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordOutlined/></span>
+        <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptOutlined/></span>
+        <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
+        <span v-else-if="item.type==='png'"><FileImageOutlined/></span>
+        <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
+        <span v-else-if="item.type==='pdf'"><FilePdfOutlined/></span>
+        <span v-else><FileUnknownOutlined/></span>
+        <span class="item-name">{{ item.name }}</span>
       </p>
     </div>
-    <input type="file" id="file-upload" style="display: none;">
+    <input type="file" id="file-upload" style="display: none; position: absolute;">
     <div class="file-items-footer">
       <span>当前所在目录:</span>
-        <a-breadcrumb>
-          <a-breadcrumb-item v-for="item in breadcrumbList">
-            <a href="#">{{item.name}}</a>
-          </a-breadcrumb-item>
-        </a-breadcrumb>
-      <span>一共：{{totalFileSize}}个项目</span>
+      <a-breadcrumb>
+        <a-breadcrumb-item v-for="item in breadcrumbList">
+          <a href="#">{{ item.name }}</a>
+        </a-breadcrumb-item>
+      </a-breadcrumb>
+      <span>一共：{{ totalFileSize }}个项目</span>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import {FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
-  FileUnknownOutlined, FileOutlined,FileExcelOutlined,FileWordOutlined,
-  FilePptOutlined,FileImageOutlined,FileJpgOutlined,FilePdfOutlined,
-  PlusCircleOutlined} from '@ant-design/icons-vue';
-import { message, Modal  } from 'ant-design-vue';
-import { shallowRef, ref, createVNode, onMounted  } from "vue";
-import { menusEvent } from 'vue3-menus';
+import {
+  FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
+  FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
+  FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
+  PlusCircleOutlined
+} from '@ant-design/icons-vue';
+import {message, Modal} from 'ant-design-vue';
+import {shallowRef, ref, createVNode, onMounted} from "vue";
+import {menusEvent} from 'vue3-menus';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
+import {useItemSelectStore} from "../store/useItemSelectStore";
+import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 defineEmits(['choose-note'])
 
 //右击空白区域时显示的菜单
 const spaceClick = (event) => {
-  menusEvent(event,spaceMenus.value)
+  if (menuCompKeySelected === itemList.treeFiles) {
+    menusEvent(event, spaceMenus.value)
+  } else if (menuCompKeySelected === itemList.delFiles) {
+    menusEvent(event, delSpaceMenus.value)
+  }
+
   event.preventDefault();
   event.stopPropagation();
 }
 
 //右击某个项目区域时显示的菜单
 const itemClick = (event, item) => {
-  menusEvent(event, fileItemMenus.value, item)
+  if (menuCompKeySelected === itemList.treeFiles) {
+    menusEvent(event, fileItemMenus.value, item)
+  } else if (menuCompKeySelected === itemList.delFiles) {
+    menusEvent(event, delItemMenus.value, item)
+  }
+
   event.preventDefault();
   event.stopPropagation();
 }
 
 const selectStore = useSelectStore();
+const itemSelectStore = useItemSelectStore();
 
 //当前的父目录Key 或者 id 或者 parentId
 let dirSelectKey = '';
 
 //总文件数
 const totalFileSize = ref(0)
-
 //当前选中的项目id或key, 也就是fileListData选中的其中一项
 let fileSelectKey = ref('');
 //笔记项目列表
 const fileListData = ref([]);
+//更新文件列表及总文件数量
+const setFileListData = (info) => {
+  const data = info.data
+  fileListData.value = []
+  for (let dt of data) {
+    fileListData.value.push(dt)
+  }
+  totalFileSize.value = fileListData.value.length
+}
+
 let addNoteUpdate = 0; //see useSelectStore.js
 //订阅监听tree的key变更
-selectStore.$subscribe((mutation, state) =>{
+selectStore.$subscribe((mutation, state) => {
   const changeKey = state.dirSelectKey;
-  if (changeKey != undefined && dirSelectKey != changeKey) {
-    dirSelectKey =  changeKey
+  if (changeKey !== undefined && dirSelectKey !== changeKey) {
+    dirSelectKey = changeKey
     updateFileList({"nid": dirSelectKey});
     //更新面包线
     updateBreadcrumb({id: dirSelectKey})
   }
 
-  if (state.addNoteUpdate != undefined && addNoteUpdate != state.addNoteUpdate) {
+  if (state.addNoteUpdate !== undefined && addNoteUpdate !== state.addNoteUpdate) {
     addNoteUpdate = state.addNoteUpdate
     updateFileList({"nid": dirSelectKey})
   }
 })
 
+//menu组件当前选中的item项
+const itemList = constFlag.itemList
+let menuCompKeySelected = itemList.treeFiles
+//监听menu组件item(最近删除,tree树,最近更新...)改变情况
+itemSelectStore.$subscribe((mutation, state) => {
+  const curKey = menuCompKeySelected = state.itemSelectKey
+  if (curKey !== undefined) {
+    if (curKey === itemList.rencentFiles) {
+      updateRecentFileLists()
+    } else if (curKey === itemList.delFiles) {
+      updateDeletedFileLists()
+    }
+  }
+})
+
+//更新最近文件列表
+const updateRecentFileLists = () => {
+  noteApi.getRecentFiles().then(res => {
+    const recentFileDatas = res.data.datas
+    setFileListData({data: recentFileDatas})
+  }).catch(err => {
+    console.error(err)
+    message.error("获取最近文件数据失败")
+  })
+}
+
+//更新已删除的文件列表
+const updateDeletedFileLists = () => {
+  noteApi.getDeletedFiles().then(res => {
+    const delFileDatas = res.data.datas
+    setFileListData({data: delFileDatas})
+  }).catch(err => {
+    console.error(err)
+    message.error("获取删除文件列表数据失败")
+  })
+}
+
 //单击选中某个笔记
 const oneceClick = (emit, info) => {
   fileSelectKey.value = info.id;
+  //告诉主App组件当前menu组件选中的item情况
+  info.curMenuItemType = menuCompKeySelected
   emit('choose-note', info)
 }
 
@@ -111,7 +173,7 @@ const backParentDir = () => {
     const resData = res.data
     const parentId = resData.datas.parentId;
     if (parentId == '0' || parentId == 0) {//顶层目录不可再退回
-      message.warning("当前["+resData.datas.name+"]已是顶层目录,不可回退")
+      message.warning("当前[" + resData.datas.name + "]已是顶层目录,不可回退")
       return
     }
 
@@ -129,7 +191,7 @@ const backParentDir = () => {
 const breadcrumbList = ref([])
 const updateBreadcrumb = (info) => {
   noteApi.findBreadcrumb({id: info.id}).then(res => {
-    const data  = res.data.datas
+    const data = res.data.datas
     breadcrumbList.value = []
     for (let dt of data) {
       breadcrumbList.value.push(dt)
@@ -142,9 +204,13 @@ const updateBreadcrumb = (info) => {
 
 //双击某个项目时
 const doubleClick = (info) => {
-  if (info.isile != '0') {
+  if (info.isile !== '0') {
     return
   }
+  if (menuCompKeySelected === itemList.delFiles) {
+    return;
+  }
+
   const dClickId = info.id
   dirSelectKey = dClickId
   updateFileList({"nid": dirSelectKey})
@@ -156,13 +222,8 @@ const doubleClick = (info) => {
 //更新文件列表
 const updateFileList = (para) => {
   noteApi.getNoteList(para).then((res) => {
-    const data  = res.data.datas
-    fileListData.value = []
-    for (let dt of data) {
-      fileListData.value.push(dt)
-    }
-    totalFileSize.value = fileListData.value.length
-
+    const data = res.data.datas
+    setFileListData({data: data})
   }).catch(err => {
     message.error('数据交互失败');
     console.error(err)
@@ -210,24 +271,26 @@ function filterClick(event) {
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
   let iptV = info.content || ' '
-  const idKey = info.key //当前节点id
-  const parentId = info.parentId //父节点id
+  const idKey = info.key || '' //当前节点id
+  const parentId = info.parentId || '' //父节点id
   Modal.confirm({
     title: info.title,
     icon: createVNode(PlusCircleOutlined),
+    keyboard: true,
+    closable: true,
     content: createVNode('input',
         {type: 'text', value: iptV, id: 'd-input02', style: {width: '100%'}}),
     onOk() {
       const iptE = document.querySelector("#d-input02");
       iptV = iptE.value; //输入值
-      if (info.opType == opType.createNewFile || info.opType == opType.createDir) {
+      if (info.opType === opType.createNewFile || info.opType === opType.createDir) {
         const submitData = {
           parentId: parentId,
           name: iptV,
           isile: info.isile
         }
         if (info.isile == '1') { //文件
-            submitData.type = info.type
+          submitData.type = info.type
         }
         noteApi.addNote(submitData).then(res => {
           const resData = res.data
@@ -247,7 +310,7 @@ const showInputModalConfirm = (info) => {
           console.error(err)
         })
 
-      } else if (info.opType == opType.delNote) {
+      } else if (info.opType === opType.delNote) {
         noteApi.delNote({id: idKey}).then(res => {
           const resData = res.data
           if (resData.respCode === 0) {
@@ -264,7 +327,7 @@ const showInputModalConfirm = (info) => {
           console.error(err)
         })
 
-      } else if (info.opType == opType.rename) {
+      } else if (info.opType === opType.rename) {
         const submitData = {id: idKey, name: iptV}
         noteApi.update(submitData).then(res => {
           const resData = res.data
@@ -279,6 +342,30 @@ const showInputModalConfirm = (info) => {
           }
         }).catch(err => {
           message.warning("操作错误")
+          console.error(err)
+        })
+      } else if (info.opType === opType.destroy) {
+        noteApi.destroyNote({id: idKey}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            message.success("彻底删除成功")
+            //更新当前列表
+            updateDeletedFileLists()
+          }
+        }).catch(err => {
+          message.error("彻底删除失败")
+          console.error(err)
+        })
+      } else if (info.opType === opType.allDestroy) {
+        noteApi.allDestroy().then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            message.success("全部删除成功")
+            //更新当前列表
+            updateDeletedFileLists()
+          }
+        }).catch(err => {
+          message.error("全部删除失败")
           console.error(err)
         })
       }
@@ -299,7 +386,9 @@ const notifyParentDirUpdate = () => {
 }
 
 //鼠标右击菜单
-const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3}
+const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
+  destroy: 4,  allDestroy: 5}
+//右击某个文件item的菜单
 const fileItemMenus = shallowRef({
   menus: [
     {
@@ -309,7 +398,7 @@ const fileItemMenus = shallowRef({
         arg.title = menu.label
         arg.content = '请输入新文件名称'
         arg.isile = '1' //文件
-        arg.type  = 'md' //暂时默认wer文件
+        arg.type = 'md' //暂时默认wer文件
         arg.opType = opType.createNewFile //
         arg.key = arg.parentId //必须是当前选中的节点父节点id
         showInputModalConfirm(arg)
@@ -352,9 +441,80 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
+    },
+    {
+      label: "复制预览地址",
+      tip: 'preview',
+      click: (menu, arg) => {
+        if (arg.isile === '0') {
+          message.warning("不支持文件夹预览")
+          return true
+        }
+
+        if (arg.type === 'md' ||
+            arg.type === 'wer' ||
+            arg.type === 'doc' ||
+            arg.type === 'docx' ||
+            arg.type === 'xls' ||
+            arg.type === 'xlsx' ||
+            arg.type === 'ppt' ||
+            arg.type === 'pptx'
+        ) {
+          message.warning("不支持Md,Wer,Office文件预览")
+          return true
+        }
+
+        const id = arg.id;
+        noteApi.getNoteAndSite({id: id}).then(res => {
+          const noteFile = res.data.datas.noteFile
+          const previewUrl = noteFile.url
+          navigator.clipboard.writeText(previewUrl).then(() => {
+            message.success("复制到剪切板成功")
+          }).catch(err => {
+            message.error("复制到剪切板失败")
+            console.error(err)
+          })
+        }).catch(err => {
+          message.error("网络请求信息失败")
+          console.error(err)
+        })
+
+        return true;
+      }
+    },
+    {
+      label: "下载",
+      tip: 'download',
+      click: (menu, arg) => {
+        if (arg.isile === '0') {
+          message.warning("不支持文件夹下载")
+          return true
+        }
+        if (arg.type === 'md' ||
+            arg.type === 'wer'
+
+        ) {
+          message.warning("不支持Md,Wer文件下载")
+          return true
+        }
+
+        const id = arg.id;
+        noteApi.getNoteAndSite({id: id}).then(res => {
+          const noteFile = res.data.datas.noteFile
+          const downloadUrl = noteFile.url.replace('view', 'download')
+          window.open(downloadUrl)
+          message.success("下载成功")
+        }).catch(err => {
+          message.error("网络请求信息下载失败")
+          console.error(err)
+        })
+
+        return true;
+      }
     }
   ]
 })
+//空白区域右击菜单列表
 const spaceMenus = shallowRef({
   menus: [
     {
@@ -415,14 +575,90 @@ const spaceMenus = shallowRef({
   ]
 })
 
+//已删除的文件item右击菜单
+const delItemMenus = shallowRef({
+  menus: [
+    {
+      label: "恢复",
+      tip: 'Recover',
+      click: (menu, arg) => {
+        noteApi.update({id: arg.id, del: 0}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            message.success("恢复成功")
+            //更新当前列表
+            updateDeletedFileLists()
+          }
+        }).catch(err => {
+          message.error("恢复失败")
+          console.error(err)
+        })
+
+        return true;
+      }
+    },
+    {
+      label: "彻底删除",
+      tip: 'delete',
+      click: (menu, arg) => {
+        arg.key = arg.id
+        arg.title = '彻底删除'
+        arg.content = arg.name
+        arg.opType = opType.destroy
+        showInputModalConfirm(arg)
+        return true;
+      }
+    }
+  ]
+})
+//已删除的文件空白区域右击菜单
+const delSpaceMenus = shallowRef({
+  menus: [
+    {
+      label: "全部恢复",
+      tip: 'AllRecover',
+      click: () => {
+        noteApi.allRecover().then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            message.success("全部恢复除成功")
+            //更新当前列表
+            updateDeletedFileLists()
+          }
+        }).catch(err => {
+          message.error("全部恢复失败")
+          console.error(err)
+        })
+        return true;
+      }
+    },
+    {
+      label: "全部删除",
+      tip: 'AllDestroy',
+      click: () => {
+        const arg = {
+          title: '全部删除',
+          content: '是否全部删除',
+          opType: opType.allDestroy,
+        }
+        showInputModalConfirm(arg)
+        return true;
+      }
+    }
+  ]
+})
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in byte
 onMounted(() => {
-  document.getElementById('file-upload').addEventListener('change', function(event) {
+  document.getElementById('file-upload').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        message.warning('File is too large. Maximum size allowed is 10MB.');
+        return;
+      }
       const formData = new FormData();
       formData.append('file', file);
       formData.append('parentId', dirSelectKey);
-      formData.append('userId', '1111');
       fetch('http://api.note.yms.top/note/file/uploadNote', { // 替换成你的上传接口
         method: 'POST',
         body: formData
@@ -445,19 +681,26 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+.files-scope {
+  height: 100%;
+  position: relative;
+}
+
 .f-search {
   display: flex;
   align-items: center;
   justify-content: space-around;
 }
+
 .file-items {
   margin-top: 10px;
   overflow-y: auto;
   overflow-x: hidden;
-  height: 800px;
   padding: 5px;
-  position: relative;
+  height: 85vh;
 }
+
 .file-items p:hover {
   background-color: antiquewhite;
   cursor: default;

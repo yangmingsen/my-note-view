@@ -30,6 +30,7 @@ function rstr_hmac_md5(c, f) {
     var g = binl_md5(a.concat(rstr2binl(f)), 512 + f.length * 8);
     return binl2rstr(binl_md5(d.concat(g), 512 + 128))
 }
+
 function rstr2hex(c) {
     try {
         hexcase
@@ -45,6 +46,7 @@ function rstr2hex(c) {
     }
     return b
 }
+
 function str2rstr_utf8(c) {
     var b = "";
     var d = -1;

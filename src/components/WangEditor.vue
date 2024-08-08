@@ -22,14 +22,22 @@ import {onBeforeUnmount, ref, shallowRef, onMounted, watch} from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { message  } from 'ant-design-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi";
-import { DomEditor } from '@wangeditor/editor'
-import {hex_md5} from '../store/encryptionAlgorithm.js'
-
+import {hex_md5} from '../js/encryptionAlgorithm.js'
 
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef()
 // 内容 HTML
 const valueHtml = ref('')
+
+let taskRef = undefined;
+//组件挂载后
+onMounted(() => {
+  taskRef = setInterval(() => {
+    saveContent({id: props.noteid, content: getCurContent()})
+  }, 30*1000)
+})
+
+
 const toolbarConfig = {}
 const editorConfig = {placeholder: '请输入内容...',  MENU_CONF: {}}
 const mode = ref('default') // 或 'simple'
@@ -109,7 +117,10 @@ editorConfig.MENU_CONF['uploadImage'] = {
 // 组件销毁时，也及时销毁编辑器
 onBeforeUnmount(() => {
   //退出前保存
-  saveContent({id: props.noteid, content: valueHtml.value})
+  saveContent({id: props.noteid, content: getCurContent()})
+  //取消定时任务
+  clearInterval(taskRef)
+  //销毁组件
   const editor = editorRef.value
   if (editor == null) return
   editor.destroy()
@@ -121,11 +132,18 @@ const handleCreated = (editor) => {
 
 const props = defineProps(['noteid'])
 
+
+const getCurContent = () => {
+  const editor = editorRef.value
+  const htmlContent = editor.getHtml()
+  return htmlContent
+}
+
 watch(() => props.noteid,  (noteidNew, noteidOld) => {
   noteApi.noteContentGet({id: noteidNew}).then(res => {
     if (noteidOld != undefined) {
       const id = noteidOld;
-      const oldData = valueHtml.value;
+      const oldData = getCurContent();
       const latestVersion =  hex_md5(oldData)
       //如果没有修改过就不同步
       if (latestVersion != serverDataVersion) {
@@ -136,8 +154,6 @@ watch(() => props.noteid,  (noteidNew, noteidOld) => {
           message.error("同步失败")
           console.error(err)
         })
-      } else {
-        message.warning("版本相同不同步")
       }
     }
 
@@ -146,9 +162,11 @@ watch(() => props.noteid,  (noteidNew, noteidOld) => {
       message.warning("获取内容为空")
       valueHtml.value = ''
     } else {
+      valueHtml.value = ''
       valueHtml.value = resData.content
-      serverDataVersion = hex_md5(valueHtml.value)
+      serverDataVersion = hex_md5(resData.content)
     }
+
   }).catch(err => {
     message.error("获取内容出错")
     console.error(err)
@@ -158,17 +176,17 @@ watch(() => props.noteid,  (noteidNew, noteidOld) => {
 //保存服务器最新版本号
 let serverDataVersion = '';
 
+
 const saveContent = (info) => {
   const noteId = info.id
-  const syncData = info.content
+  const syncData = getCurContent()
   const latestVersion =  hex_md5(syncData)
-  console.log(latestVersion+"----"+serverDataVersion)
   //如果没有修改过就不同步
   if (latestVersion == serverDataVersion) {
-    message.warning("版本相同不同步")
     //版本相同不同步
     return
   }
+  serverDataVersion = latestVersion
   const para = {id: noteId, content: syncData}
   noteApi.noteContentAddAndUpdate(para).then(res => {
     message.success("同步成功")
