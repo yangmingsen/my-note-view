@@ -1,0 +1,106 @@
+.main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    min-height: 100vh;
+
+    background: url('http://api.note.yms.top/note/file/view?id=66b64d790bc2890980f632c2') no-repeat bottom;
+    /*background: url('login-bg.jpg') no-repeat bottom;*/
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    -ms-background-size: cover;
+    z-index: 1;
+    position: relative;
+
+}
+
+.main::before {
+    position: absolute;
+    content:'';
+    top:0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: -1;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.form {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+}
+
+.wthree-field {
+    margin-bottom:14px;
+}
+.wthree-field input {
+    padding: 14px 30px;
+    font-size: 16px;
+    color: #999;
+    letter-spacing: 0.5px;
+    border: 1px solid #e1e1e1;
+    background: #fff;
+    box-sizing: border-box;
+    font-family: 'Noto Sans JP', sans-serif;
+    width: 100%;
+    border-radius: 35px;
+    -webkit-border-radius: 35px;
+    -moz-border-radius: 35px;
+    -ms-border-radius: 35px;
+    -o-border-radius: 35px;
+}
+::-webkit-input-placeholder { /* Edge */
+    color: #999;
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color:  #999;
+}
+
+::placeholder {
+    color: #999;
+}
+
+.wthree-field button.btn {
+    background: #EA4C89;
+    border: none;
+    color: #fff;
+    padding: 14px 14px;
+    text-transform: uppercase;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    width:100%;
+    letter-spacing:1px;
+    outline: none;
+    cursor: pointer;
+    transition: 0.5s all;
+    -webkit-transition: 0.5s all;
+    -moz-transition: 0.5s all;
+    -o-transition: 0.5s all;
+    -ms-transition: 0.5s all;
+    border-radius: 35px;
+    -webkit-border-radius: 35px;
+    -moz-border-radius: 35px;
+    -ms-border-radius: 35px;
+    -o-border-radius: 35px;
+}
+.wthree-field button.btn:hover {
+    background:#de3d7b;
+}
+.login-bottom {
+    margin-top:3em;
+}
+.login-bottom a {
+    font-size: 16px;
+    color: #fff;
+    font-weight: normal;
+    letter-spacing: 1px;
+    padding: 0 5px;
+    text-transform: capitalize;
+}

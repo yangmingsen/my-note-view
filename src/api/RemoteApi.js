@@ -1,6 +1,7 @@
 import request from "./request";
+import {ConstansFlag} from "../js/ConstansFlag";
 
-const rurl = "http://api.note.yms.top/note"
+const rurl = ConstansFlag.apiUrl
 
 export const RemoteApi = {
     /**
@@ -32,6 +33,7 @@ export const RemoteApi = {
 
 
     /**
+     * @params params {nid: '父目录id'}
      * 获取子目录数据(目录和文件)
      */
     async getNoteList(params) {
@@ -46,6 +48,15 @@ export const RemoteApi = {
 
     async findOne(params) {
         return await request.get(rurl+"/note-index/findOne", params);
+    },
+
+    /**
+     * 找某个用户的根节点
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async findRoot(params) {
+        return await request.get(rurl+"/note-index/findRoot", params);
     },
 
     /**
@@ -119,6 +130,37 @@ export const RemoteApi = {
 
 
     /**
+     * 上传文件接口
+     * 文件可以是图片，文本等...
+     *
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async fileUpload(params) {
+        return await request.post(rurl+"/file/uploadV2", params);
+    },
+
+    /**
+     * 上传文本，将剪贴板的文本内容上传
+     * @param params {parentId: 'xxxx', text: 'xxxx'}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async uploadText(params) {
+        return await request.post(rurl+"/file/uploadText", params);
+    },
+
+    /**
+     * 上传note文件
+     * 如果是md文件会被解析后保存到mysql, 其他暂时放入mongo中
+     * @param params {file: 'file', parentId: 'xxxx'}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async uploadNote(params) {
+        return await request.post(rurl+"/file/uploadNote", params);
+    },
+
+
+    /**
      * 添加或更新笔记内容
      * @param params
      * @returns {Promise<AxiosResponse<any>>}
@@ -159,5 +201,7 @@ export const RemoteApi = {
     async noteContentCanPreview(params) {
         return await request.get(rurl+"/note-data/checkFileCanPreview", params);
     },
+
+
 
 }

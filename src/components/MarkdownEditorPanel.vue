@@ -2,8 +2,9 @@
   <v-md-editor
       v-model="dataText"
       height="900px"
+      :disabled-menus="[]"
       @save="manualSave"
-      @change="contentChange"
+      @upload-image="handleUploadImage"
   ></v-md-editor>
 </template>
 
@@ -72,7 +73,26 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
 
 },{immediate: true})
 
+const handleUploadImage = (event, insertImage, files) => {
+  // 拿到 files 之后上传到文件服务器，然后向编辑框中插入对应的内容
+  const file = files[0]
+  noteApi.fileUpload({file: file}).then(res => {
+    const resData = res.data;
+    if (resData.respCode === 0) {
+      // 此处只做示例
+      insertImage({
+        url: resData.datas.url,
+        desc: resData.datas.alt,
+        // width: 'auto',
+        // height: 'auto',
+      });
+    }
+  }).catch(err => {
+    console.error(err)
+    message.error("上传文件错误..")
+  })
 
+}
 
 //保存服务器最新版本号
 let serverDataVersion = '';
@@ -80,11 +100,13 @@ const saveContent = (info) => {
   const noteId = info.id
   const syncData = info.content
   const latestVersion =  hex_md5(syncData)
-  console.log(latestVersion+"----"+serverDataVersion)
   //如果没有修改过就不同步
   if (latestVersion == serverDataVersion) {
     // message.warning("md版本相同不同步")
     //版本相同不同步
+    if (info.op !== undefined && info.op === 1) {
+      message.warning("版本相同不同步")
+    }
     return
   }
   const para = {id: noteId, content: syncData}
@@ -100,13 +122,7 @@ const saveContent = (info) => {
 
 //手动保存
 const manualSave = (text, html) => {
-  saveContent({id: props.noteid, content: text})
-}
-
-let cnt = 0
-const contentChange = (text, html) => {
-  cnt++;
-  console.log("cnt="+cnt)
+  saveContent({id: props.noteid, content: text, op: 1})
 }
 
 

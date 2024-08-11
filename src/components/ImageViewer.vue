@@ -20,7 +20,6 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
       const noteFile = res.data.datas.noteFile
       images.value = []
       images.value.push(noteFile.url)
-      console.log(images.value)
     }).catch(err => {
       message.error("获取img信息失败")
       console.error(err)

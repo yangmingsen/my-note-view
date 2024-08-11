@@ -7,7 +7,7 @@
       </div>
       <img @click.left="filterClick($event)" src="../assets/filter.png">
     </div>
-    <div class="file-items" @contextmenu="spaceClick($event)">
+    <div id="drop-file-area"   class="file-items" @contextmenu="spaceClick($event)">
       <p v-for="item in fileListData"
          :class="item.id === fileSelectKey ? 'active' : ''"
          @click="oneceClick($emit, item)"
@@ -46,7 +46,7 @@ import {
   FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
   FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
   FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
-  PlusCircleOutlined
+  PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
 import {shallowRef, ref, createVNode, onMounted} from "vue";
@@ -225,9 +225,13 @@ const updateFileList = (para) => {
     const data = res.data.datas
     setFileListData({data: data})
   }).catch(err => {
-    message.error('数据交互失败');
+    message.error('获取Note列表数据失败');
     console.error(err)
   })
+}
+
+const autoUpdateFileList = () => {
+  updateFileList({nid: dirSelectKey})
 }
 
 const filterMenus = shallowRef({
@@ -571,6 +575,14 @@ const spaceMenus = shallowRef({
         document.querySelector("#file-upload").click();
         return true;
       }
+    },
+    {
+      label: "粘贴",
+      tip: 'paste',
+      click: (menu) => {
+        readClipboardData();
+        return true;
+      }
     }
   ]
 })
@@ -647,6 +659,74 @@ const delSpaceMenus = shallowRef({
     }
   ]
 })
+
+//从剪贴板获取内容
+const readClipboardData = () => {
+  const pid = dirSelectKey
+  navigator.clipboard.read()
+    .then(data => {
+      data.forEach(item => {
+        if (item.types.length === 0) {
+          message.warning("当前不支持粘贴")
+          return
+        }
+
+        if (item.types[0].includes('image')) {
+          item.getType(item.types[0]).then(blob => {
+            let formData = new FormData();
+            formData.append('file', blob, 'pasted-image.png'); // 添加文件名
+            formData.append('parentId', pid);
+            // 执行上传请求
+            const reqUrl = constFlag.apiUrl+'/file/uploadNote'
+            fetch(reqUrl, {
+              method: 'POST',
+              body: formData
+            }).then(response => response.json())
+                .then(data => {
+                  message.success("上传成功...")
+                }).catch(error => {
+              message.error("上传失败...")
+              console.error('Error uploading image:', error);
+            });
+            // noteApi.uploadNote(formData).then(res => {
+            //     const resData = res.data
+            //     if (resData.respCode === 0) {
+            //         message.success("剪贴板上传成功")
+            //         autoUpdateFileList()
+            //     }
+            //   }).catch(err => {
+            //       message.error("剪贴板上传失败")
+            //       console.error(err)
+            //   })
+          });
+        } else if (item.types[0] === 'text/plain') {
+          item.getType('text/plain').then( textBlob => {
+            // 将 Blob 转换为文本
+            textBlob.text().then(text => {
+              // 处理文本内容
+              noteApi.uploadText({content: text, parentId: pid}).then(res => {
+                const resData = res.data
+                if (resData.respCode === 0) {
+                  message.success("剪贴板文本上传成功")
+                  autoUpdateFileList()
+                }
+              }).catch(err => {
+                message.error("剪贴板文本上传失败")
+                console.error(err)
+              })
+            });
+          });
+        } else {
+          const newInfo = item.types[0]
+          message.warning(`待支持${newInfo}`)
+        }
+      })
+    }).catch(err => {
+      console.error('读取剪贴板数据时出错:', err);
+      message.error('读取剪贴板数据时出错')
+  })
+}
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in byte
 onMounted(() => {
   document.getElementById('file-upload').addEventListener('change', function (event) {
@@ -659,7 +739,8 @@ onMounted(() => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('parentId', dirSelectKey);
-      fetch('http://api.note.yms.top/note/file/uploadNote', { // 替换成你的上传接口
+      const reqUrl = constFlag.apiUrl+'/file/uploadNote'
+      fetch(reqUrl, { // 替换成你的上传接口
         method: 'POST',
         body: formData
       })
@@ -676,6 +757,50 @@ onMounted(() => {
           });
     }
   });
+
+  //初始化内容
+  noteApi.findRoot().then(res => {
+    const resData = res.data;
+    if (resData.respCode === 0) {
+      const rootId = resData.datas.id;
+      //初始化文件列表
+      updateFileList({nid: rootId})
+
+      //面包线
+      updateBreadcrumb({id: rootId})
+    }
+  }).catch(err => {
+    message.error("获取root失败")
+    console.error(err)
+  })
+
+  //运行拖拽上传
+  //drop-file-area
+  let dropArea = document.getElementById('drop-file-area');
+  dropArea.addEventListener('dragover', function(event) {
+    event.preventDefault();  // 允许放置
+    // dropArea.style.borderColor = 'blue';  // 改变边框颜色以指示可放置
+    // event.dataTransfer.dropEffect = 'copy';  // 显示"复制"效果
+  });
+  dropArea.addEventListener('drop', function(event) {
+    event.preventDefault();
+    let files = event.dataTransfer.files;
+    if (files.length > 0) {
+      // 处理文件上传
+      noteApi.uploadNote({file: files[0], parentId: dirSelectKey}).then(res => {
+        const resData = res.data
+        if (resData.respCode === 0) {
+          autoUpdateFileList()
+          message.success("上传成功")
+        }
+      }).catch(err => {
+        console.error(err)
+        message.error("drop文件上传失败")
+      })
+    }
+  });
+
+
 })
 
 </script>
@@ -715,7 +840,8 @@ onMounted(() => {
 }
 
 .file-items-footer {
-  background-color: #cbc8c8;
+  /*background-color: #cbc8c8;*/
+  background-color: rgba(203,200,200, 0.8);
   position: absolute;
   width: 100%;
   bottom: 0
