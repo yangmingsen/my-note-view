@@ -3,32 +3,49 @@
     <div class="f-search">
       <img @click="backParentDir" src="../assets/回车按钮.png">
       <div class="search-content">
-        <input type="text" value="搜索...">
+        <input type="text" value="搜索..." @click.left="mouseClick">
       </div>
       <img @click.left="filterClick($event)" src="../assets/filter.png">
     </div>
     <div id="drop-file-area"   class="file-items" @contextmenu="spaceClick($event)">
-      <p v-for="item in fileListData"
+      <div v-for="item in fileListData"
          :class="item.id === fileSelectKey ? 'active' : ''"
          @click="oneceClick($emit, item)"
          @dblclick="doubleClick(item)"
          @contextmenu="itemClick($event, item)"
       >
-        <span v-if="item.isile === '0'"><FolderOutlined/></span>
-        <span v-else-if="item.type==='md'"><FileMarkdownOutlined/></span>
-        <span v-else-if="item.type==='wer'"><FileOutlined/></span>
-        <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelOutlined/></span>
-        <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordOutlined/></span>
-        <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptOutlined/></span>
-        <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
-        <span v-else-if="item.type==='png'"><FileImageOutlined/></span>
-        <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
-        <span v-else-if="item.type==='pdf'"><FilePdfOutlined/></span>
-        <span v-else><FileUnknownOutlined/></span>
-        <span class="item-name">{{ item.name }}</span>
-      </p>
+        <div>
+          <span v-if="item.isile === '0'"><FolderOutlined/></span>
+          <span v-else-if="item.type==='md'"><FileMarkdownOutlined/></span>
+          <span v-else-if="item.type==='wer'"><FileOutlined/></span>
+          <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelOutlined/></span>
+          <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordOutlined/></span>
+          <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptOutlined/></span>
+          <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
+          <span v-else-if="item.type==='png'"><FileImageOutlined/></span>
+          <span v-else-if="item.type==='gif'"><FileGifOutlined /></span>
+          <span v-else-if="item.type==='txt'"><FileTextOutlined /></span>
+          <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
+          <span v-else-if="item.type==='pdf'"><FilePdfTwoTone /></span>
+          <span v-else><FileUnknownOutlined/></span>
+          <span class="item-name">{{ item.name }}</span>
+        </div>
+        <div>
+          <span class="item-create-time">创建时间: {{item.createTime}}</span>
+        </div>
+
+      </div>
     </div>
     <input type="file" id="file-upload" style="display: none; position: absolute;">
+    <div id="search-modal" class="search-modal">
+      <input type="text" v-model="keyword" id="search-input" @input="searchEvent"  placeholder="Search...">
+      <ul id="suggestions-list">
+        <li
+            v-for="sug in suggestionsList"
+            @click="sugliClick(sug)"
+        >{{sug.result}}</li>
+      </ul>
+    </div>
     <div class="file-items-footer">
       <span>当前所在目录:</span>
       <a-breadcrumb>
@@ -42,11 +59,12 @@
 </template>
 
 <script setup>
-import {
+import {FilePdfTwoTone,
   FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
   FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
   FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
-  PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined
+  PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined,FileTextOutlined,FileGifOutlined,
+
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
 import {shallowRef, ref, createVNode, onMounted} from "vue";
@@ -56,7 +74,85 @@ import {useSelectStore} from "../store/useSelectStore";
 import {useItemSelectStore} from "../store/useItemSelectStore";
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
-defineEmits(['choose-note'])
+const emitT = defineEmits(['choose-note'])
+
+//搜索关键字
+const keyword = ref('')
+let timer = null
+let keyLen = false
+const searchEvent = () => {
+  clearTimer()
+  if (keyword.value && keyword.value.length > 0) {
+    keyLen = true
+    timer = setTimeout(() => {
+      // console.log(`keyword: ${keyword.value}`)
+      //此处为接口函数
+      performSearch({searchContent: keyword.value})
+    }, 500)
+  } else {
+    if (keyLen) {
+      // console.log(`keyword: ${keyword.value}`)
+      //此处为接口函数
+      performSearch({searchContent: keyword.value})
+    }
+    if (keyword.value === '') {
+      keyLen = false
+      return
+    }
+  }
+}
+
+const clearTimer = () => {
+  if (timer) {
+    clearTimeout(timer)
+  }
+}
+
+const performSearch = (info) => {
+  const query = info.searchContent;
+  noteApi.findNoteByCondition({searchContent: query}).then(res => {
+    const resData = res.data;
+    if (resData.respCode === 0) {
+      const listResult = resData.datas.listResult;
+      suggestionsList.value = listResult
+    }
+  }).catch(err => {
+    message.error("搜索失败")
+    console.error(err)
+  })
+}
+
+//搜索列表
+const suggestionsList = ref([])
+const sugliClick = (info) => {
+  const pid = info.parentId
+  const id = info.id
+  //更新目录列表
+  dirSelectKey = pid
+  updateFileList({"nid": dirSelectKey})
+  //更新面包线
+  updateBreadcrumb({id: dirSelectKey})
+
+  //向上父父组件传递信息
+  info.upTree = true //通知tree组件更新选中情况
+  emitT('choose-note', info)
+  //更新当前选中
+  fileSelectKey.value = id
+  //关闭显示
+  document.getElementById('search-modal').style.display = 'none';
+  //clear search keyword
+  keyword.value = ''
+  suggestionsList.value = []
+}
+
+
+
+const mouseClick = () => {
+  const searchModal = document.getElementById('search-modal');
+  searchModal.classList.remove('hide');
+  searchModal.style.display = 'block';
+  document.getElementById('search-input').focus();
+}
 
 //右击空白区域时显示的菜单
 const spaceClick = (event) => {
@@ -688,16 +784,6 @@ const readClipboardData = () => {
               message.error("上传失败...")
               console.error('Error uploading image:', error);
             });
-            // noteApi.uploadNote(formData).then(res => {
-            //     const resData = res.data
-            //     if (resData.respCode === 0) {
-            //         message.success("剪贴板上传成功")
-            //         autoUpdateFileList()
-            //     }
-            //   }).catch(err => {
-            //       message.error("剪贴板上传失败")
-            //       console.error(err)
-            //   })
           });
         } else if (item.types[0] === 'text/plain') {
           item.getType('text/plain').then( textBlob => {
@@ -801,11 +887,46 @@ onMounted(() => {
   });
 
 
+  //搜索
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const searchModal = document.getElementById('search-modal');
+      searchModal.classList.add('hide');
+      setTimeout(() => searchModal.style.display = 'none', 300);
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'f') {
+      e.preventDefault();
+      const searchModal = document.getElementById('search-modal');
+      searchModal.classList.remove('hide');
+      searchModal.style.display = 'block';
+      document.getElementById('search-input').focus();
+    }
+  });
+
+
 })
+
+
+
 
 </script>
 
 <style scoped>
+@import "../assets/search-sty.css";
+
+
+.search-modal li {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.search-modal li:hover, .search-modal li.selected {
+  background-color: #f8f9fa;
+  box-shadow: inset 5px 0 0 #4285f4;
+}
 
 .files-scope {
   height: 100%;
@@ -826,7 +947,12 @@ onMounted(() => {
   height: 85vh;
 }
 
-.file-items p:hover {
+.file-items > div {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.file-items div:hover {
   background-color: antiquewhite;
   cursor: default;
 }
@@ -837,6 +963,11 @@ onMounted(() => {
 
 .item-name {
   margin-left: 5px;
+  font-size: 0.9rem;
+}
+
+.item-create-time {
+  font-size: 0.7rem;
 }
 
 .file-items-footer {
@@ -846,5 +977,7 @@ onMounted(() => {
   width: 100%;
   bottom: 0
 }
+
+
 
 </style>

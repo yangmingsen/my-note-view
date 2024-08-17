@@ -23,6 +23,8 @@
           draggable
           block-node
           :tree-data="treeData"
+          v-model:expandedKeys="treeExpandKeys"
+          v-model:selectedKeys="treeSelectKeys"
           @rightClick="rightClick"
           @select="clickKey"
       />
@@ -32,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef,createVNode  } from 'vue';
+import {ref, shallowRef, createVNode, watch} from 'vue';
 import { menusEvent } from 'vue3-menus';
 import { message, Modal  } from 'ant-design-vue';
 import { PlusCircleOutlined, DeleteOutlined,HistoryOutlined } from '@ant-design/icons-vue';
@@ -40,6 +42,41 @@ import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
 import {useItemSelectStore} from "../store/useItemSelectStore";
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
+
+
+const props = defineProps(['upSelectKey'])
+
+watch(() => props.upSelectKey, (pidN, pidO) => {
+  if (pidN === undefined || pidN === '') {return}
+  noteApi.findBreadcrumb({id: pidN}).then(res => {
+    const data = res.data.datas
+    treeExpandKeys.value = []
+    treeSelectKeys.value = []
+    for (let dt of data) {
+      treeExpandKeys.value.push(dt.id)
+    }
+    if (data.length > 0) {
+      treeSelectKeys.value.push(pidN)
+    }
+  }).catch(err => {
+    message.error("MenuList组件获取面包线数据失败")
+    console.error(err)
+  })
+})
+
+//当前展开树节点
+const treeExpandKeys = ref([])
+//当前挑选的key..;  我现在在想要不要替换掉curSelectKey这个，但是吧这个又是数组
+const treeSelectKeys = ref([])
+
+const setTreeExpandKeys = (info) => {
+  treeExpandKeys.value = info.ids
+}
+
+const setTreeSelectKeys = (info) => {
+  treeSelectKeys.value = info.ids
+}
+
 
 const itemSelectStore = useItemSelectStore();
 const itemSelected = ref(-1)
@@ -56,8 +93,6 @@ const clickManualItem = (info) => {
 
   }
 }
-
-
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
   let iptV = info.title || ' '
@@ -163,7 +198,9 @@ const reloadDirAndFileList = (info) => {
 
 //目录选择时，key在兄弟组件之间的动态传递
 const selectStore = useSelectStore();
-let curSelectKey = ''; //当前目录选中的key(也就是上次选中的目录)
+//当前目录选中的key(也就是上次选中的目录)
+let curSelectKey = '';
+//当前鼠标点击某个tree节点时
 const clickKey = (key) => {
   //更新当前选中的treeid, 也就是父目录id
   curSelectKey = key[0];
@@ -207,6 +244,14 @@ const loadData = () => {
     for (let i=0; i<tmpNotes.length; i++) {
       treeData.value.push(tmpNotes[i]);
     }
+
+    //默认展开root目录
+    if (tmpNotes.length > 0) {
+      const rootKey = tmpNotes[0].key
+      setTreeExpandKeys({ids: [rootKey]})
+    }
+
+
   }).catch((err) => {
     message.error("调用出错了")
     console.log(err)

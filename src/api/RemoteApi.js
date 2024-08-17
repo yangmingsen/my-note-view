@@ -23,7 +23,7 @@ export const RemoteApi = {
     },
 
     /**
-     * 面包线接口
+     * 面包线接口, id为parentId
      * @param params {id: xxxx}
      * @returns {Promise<AxiosResponse<any>>}
      */
@@ -48,6 +48,15 @@ export const RemoteApi = {
 
     async findOne(params) {
         return await request.get(rurl+"/note-index/findOne", params);
+    },
+
+    /**
+     * 搜索笔记
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async findNoteByCondition(params) {
+        return await request.post(rurl+"/note-index/findNoteByCondition", params);
     },
 
     /**

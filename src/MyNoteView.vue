@@ -10,7 +10,6 @@ import WordViewer from './components/WordViewer.vue'
 import ExcelViewer from './components/ExcelViewer.vue'
 import TinyMCEPanel from './components/TinyMCEPanel.vue'
 import MarkdownPreview from './components/MarkdownPreview.vue'
-
 import {RemoteApi as noteApi} from "./api/RemoteApi"
 import {ConstansFlag as constFlag} from './js/ConstansFlag.js'
 import {ref} from 'vue'
@@ -30,11 +29,20 @@ const editorFlag = {
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
 
+//当前选中的父目录, 由FileList组件传入, 通知到MenuList组件
+const treeSelectKeys = ref('')
+
 const chooseEditor = (info) => {
   if (info.curMenuItemType === constFlag.itemList.delFiles) { //如果是menu组件选中的是删除item项,则不展示内容
     editorSelected.value = editorFlag.blank
     return
   }
+
+  //更新选中的父目录
+  if (treeSelectKeys.value !== info.parentId) {
+    treeSelectKeys.value = info.parentId
+  }
+
 
   const noteId = info.id
   if (info.isile === '0') {
@@ -63,8 +71,6 @@ const chooseEditor = (info) => {
       editorSelected.value = editorFlag.excel
     }
     else {
-      // editorSelected.value = editorFlag.notSupport
-
       noteApi.noteContentCanPreview({id: noteId}).then(res => {
         const data = res.data
         if (data.success === true) {
@@ -81,21 +87,12 @@ const chooseEditor = (info) => {
 
 }
 
-
-// const setContainerHeight = () => {
-//   const windowHeight = window.innerHeight
-//   const divHeight = document.querySelector(".container")
-//   divHeight.style.height = windowHeight + 'px'
-// }
-// window.onload = setContainerHeight
-// window.onresize = setContainerHeight
-
 </script>
 
 <template>
   <div class="container">
     <div class="menu">
-      <MenuList></MenuList>
+      <MenuList :up-select-key="treeSelectKeys"></MenuList>
     </div>
     <div class="file">
       <FileList @choose-note="(info) => {chooseEditor(info)}"></FileList>
@@ -141,13 +138,11 @@ const chooseEditor = (info) => {
   background-image: url('http://api.note.yms.top/note/file/view?id=66b64d790bc2890980f632c2');
   background-size: cover; /* 使图片覆盖整个区域 */
   min-height: 100vh;
-  z-index: 1;
 }
 
 
 .menu {
   background-color: rgba(255, 255, 255, 0.8); /* 半透明背景颜色 */
-  z-index: 2;
 }
 
 .file {
@@ -157,12 +152,10 @@ const chooseEditor = (info) => {
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
-  z-index: 2;
 }
 
 .content {
   background-color: rgba(255, 255, 255, 0.8); /* 半透明背景颜色 */
-  z-index: 2;
 }
 
 </style>
