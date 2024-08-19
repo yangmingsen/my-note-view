@@ -15,23 +15,27 @@
          @contextmenu="itemClick($event, item)"
       >
         <div>
-          <span v-if="item.isile === '0'"><FolderOutlined/></span>
-          <span v-else-if="item.type==='md'"><FileMarkdownOutlined/></span>
-          <span v-else-if="item.type==='wer'"><FileOutlined/></span>
-          <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelOutlined/></span>
-          <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordOutlined/></span>
-          <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptOutlined/></span>
+          <span v-if="item.isile === '0'"><FolderTwoTone /></span>
+          <span v-else-if="item.type==='md'"><FileMarkdownTwoTone /></span>
+          <span v-else-if="item.type==='wer'"><FileTwoTone /></span>
+          <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelTwoTone /></span>
+          <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordTwoTone/></span>
+          <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptTwoTone /></span>
           <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
-          <span v-else-if="item.type==='png'"><FileImageOutlined/></span>
+          <span v-else-if="item.type==='png'"><FileImageTwoTone/></span>
           <span v-else-if="item.type==='gif'"><FileGifOutlined /></span>
-          <span v-else-if="item.type==='txt'"><FileTextOutlined /></span>
+          <span v-else-if="item.type==='txt'"><FileTextTwoTone /></span>
           <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
           <span v-else-if="item.type==='pdf'"><FilePdfTwoTone /></span>
-          <span v-else><FileUnknownOutlined/></span>
+          <span v-else><FileUnknownTwoTone /></span>
           <span class="item-name">{{ item.name }}</span>
         </div>
         <div>
-          <span class="item-create-time">创建时间: {{item.createTime}}</span>
+          <span class="item-info-tip">{{item.createTime}}</span>
+          <span class="item-info-tip" v-if="item.isile === '0'"></span>
+          <span class="item-info-tip" v-else-if="item.size > 1048576">&nbsp;&nbsp;&nbsp;{{(item.size / 1048576).toFixed(2)}}MB</span>
+          <span class="item-info-tip" v-else-if="item.size > 1024">&nbsp;&nbsp;&nbsp;{{(item.size / 1024).toFixed(2)}}KB</span>
+          <span class="item-info-tip" v-else>&nbsp;&nbsp;&nbsp;{{item.size}}B</span>
         </div>
 
       </div>
@@ -59,7 +63,8 @@
 </template>
 
 <script setup>
-import {FilePdfTwoTone,
+import {FilePdfTwoTone,FileMarkdownTwoTone,FileImageTwoTone,FolderTwoTone,FileWordTwoTone,
+  FilePptTwoTone,FileTextTwoTone,FileExcelTwoTone,FileTwoTone,FileUnknownTwoTone,
   FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
   FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
   FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
@@ -144,8 +149,6 @@ const sugliClick = (info) => {
   keyword.value = ''
   suggestionsList.value = []
 }
-
-
 
 const mouseClick = () => {
   const searchModal = document.getElementById('search-modal');
@@ -468,6 +471,19 @@ const showInputModalConfirm = (info) => {
           message.error("全部删除失败")
           console.error(err)
         })
+      } else if (info.opType === opType.url2pdf) {
+        noteApi.url2pdf({url: iptV, parentId: parentId}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            autoUpdateFileList()
+            message.success("url2pdf成功")
+          } else {
+            message.error(`url2pdf转换失败: respCode=${resData.respCode}`)
+          }
+        }).catch(err => {
+          message.error("url2pdf转换失败")
+          console.error(err)
+        })
       }
 
     },
@@ -487,7 +503,7 @@ const notifyParentDirUpdate = () => {
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
-  destroy: 4,  allDestroy: 5}
+  destroy: 4,  allDestroy: 5, url2pdf: 6}
 //右击某个文件item的菜单
 const fileItemMenus = shallowRef({
   menus: [
@@ -679,6 +695,20 @@ const spaceMenus = shallowRef({
         readClipboardData();
         return true;
       }
+    },
+    {
+      label: "url转pdf",
+      tip: 'newPdf',
+      click: () => {
+        const arg = {
+          title: 'url转pdf',
+          content: '请输入url地址',
+          opType: opType.url2pdf,
+          parentId: dirSelectKey //当前目录id
+        }
+        showInputModalConfirm(arg)
+        return true;
+      }
     }
   ]
 })
@@ -780,6 +810,7 @@ const readClipboardData = () => {
             }).then(response => response.json())
                 .then(data => {
                   message.success("上传成功...")
+                  autoUpdateFileList()
                 }).catch(error => {
               message.error("上传失败...")
               console.error('Error uploading image:', error);
@@ -828,7 +859,8 @@ onMounted(() => {
       const reqUrl = constFlag.apiUrl+'/file/uploadNote'
       fetch(reqUrl, { // 替换成你的上传接口
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {Authorization: localStorage.getItem("token")}
       })
           .then(response => response.json())
           .then(data => {
@@ -886,7 +918,6 @@ onMounted(() => {
     }
   });
 
-
   //搜索
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -905,10 +936,7 @@ onMounted(() => {
     }
   });
 
-
 })
-
-
 
 
 </script>
@@ -966,7 +994,7 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.item-create-time {
+.item-info-tip {
   font-size: 0.7rem;
 }
 

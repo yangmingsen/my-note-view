@@ -3,7 +3,7 @@
     <div class="avtar">
       <img src="../assets/avtar.png">
     </div>
-    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>
+<!--    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>-->
     <div class="new-content">+  新文档</div>
     <div class="item-li"
          @click="clickManualItem({id: itemList.rencentFiles})"

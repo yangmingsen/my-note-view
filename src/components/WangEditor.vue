@@ -24,6 +24,8 @@ import { message  } from 'ant-design-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi";
 import {hex_md5} from '../js/encryptionAlgorithm.js'
 
+const props = defineProps(['noteid'])
+
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef()
 // 内容 HTML
@@ -34,7 +36,7 @@ let taskRef = undefined;
 onMounted(() => {
   taskRef = setInterval(() => {
     saveContent({id: props.noteid, content: getCurContent()})
-  }, 15*1000)
+  }, 30*1000)
 })
 
 
@@ -56,19 +58,20 @@ editorConfig.MENU_CONF['uploadImage'] = {
   allowedFileTypes: [],
 
   // 自定义上传参数，例如传递验证的 token 等。参数会被添加到 formData 中，一起上传到服务端。
-  // meta: {
-  //   token: 'xxx',
-  //   otherKey: 'yyy'
-  // },
+  meta: {
+    // token: 'xxx',
+    id: props.noteid
+  },
 
   // 将 meta 拼接到 url 参数中，默认 false
   // metaWithUrl: false,
 
   // 自定义增加 http  header
-  // headers: {
-  //   Accept: 'text/x-json',
-  //   otherKey: 'xxx'
-  // },
+  headers: {
+    // Accept: 'text/x-json',
+    token: localStorage.getItem("token"),
+    Authorization: localStorage.getItem("token"),
+  },
 
   // 跨域是否传递 cookie ，默认为 false
   withCredentials: true,
@@ -130,7 +133,7 @@ const handleCreated = (editor) => {
   editorRef.value = editor // 记录 editor 实例，重要！
 }
 
-const props = defineProps(['noteid'])
+
 
 
 const getCurContent = () => {

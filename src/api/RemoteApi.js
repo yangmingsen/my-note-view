@@ -168,6 +168,15 @@ export const RemoteApi = {
         return await request.post(rurl+"/file/uploadNote", params);
     },
 
+    /**
+     * url转pdf
+     * @param params {url: xxx, parentId: xxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async url2pdf(params) {
+        return await request.get(rurl+"/file/url2pdf", params);
+    },
+
 
     /**
      * 添加或更新笔记内容
@@ -212,5 +221,13 @@ export const RemoteApi = {
     },
 
 
+    /**
+     * 登录通过账号密码
+     * @param params {username: xx , password: xx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async noteLogin(params) {
+        return await request.post(rurl+"/user/login", params);
+    },
 
 }

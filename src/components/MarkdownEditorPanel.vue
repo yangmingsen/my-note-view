@@ -25,7 +25,7 @@ let taskRef = undefined;
 onMounted(() => {
   taskRef = setInterval(() => {
       saveContent({id: props.noteid, content: dataText.value})
-  }, 30*1000)
+  }, 45*1000)
 })
 
 
@@ -76,7 +76,7 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
 const handleUploadImage = (event, insertImage, files) => {
   // 拿到 files 之后上传到文件服务器，然后向编辑框中插入对应的内容
   const file = files[0]
-  noteApi.fileUpload({file: file}).then(res => {
+  noteApi.fileUpload({file: file, id: props.noteid}).then(res => {
     const resData = res.data;
     if (resData.respCode === 0) {
       // 此处只做示例

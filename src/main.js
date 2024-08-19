@@ -45,9 +45,22 @@ import 'viewerjs/dist/viewer.css'
 import VueViewer from 'v-viewer'
 
 
+import { createRouter, createWebHistory } from 'vue-router'
+import MyNoteView from './MyNoteView.vue'
+import MyNoteLogin from './MyNoteLogin.vue'
+const routes = [
+    { path: '/',  name: 'home', component: MyNoteView },
+    { path: '/login', name: 'login', component: MyNoteLogin },
+]
+const router = createRouter({
+    history: createWebHistory(),
+    routes,
+})
+
 const app = createApp(App)
 const pinia = createPinia()
 
+app.use(router)
 app.use(VMdPreview);
 app.use(VMdEditor)
 app.use(pinia)

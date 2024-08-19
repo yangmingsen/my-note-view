@@ -4,8 +4,8 @@
     grid-template-rows: 1fr 1fr 1fr;
     min-height: 100vh;
 
-    background: url('http://api.note.yms.top/note/file/view?id=66b64d790bc2890980f632c2') no-repeat bottom;
-    /*background: url('login-bg.jpg') no-repeat bottom;*/
+    /*background: url('http://api.note.yms.top/note/file/view?id=66b64d790bc2890980f632c2') no-repeat bottom;*/
+    background: url('login-bg.jpg') no-repeat bottom;
     background-size: cover;
     -webkit-background-size: cover;
     -moz-background-size: cover;

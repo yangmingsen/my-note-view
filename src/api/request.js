@@ -1,6 +1,7 @@
 import axios from "axios";
 import Qs from 'qs'
 
+
 /**
  * 获取请求主体
  * @param {Object} questData 请求数据
@@ -47,47 +48,9 @@ function getReqBody(questData, requestType) {
 
 
 //请求默认地址
-axios.defaults.baseURL = "http://api.note.yms.top/";
+// axios.defaults.baseURL = "http://api.note.yms.top/";
 //设置cross跨域 并设置访问权限 允许跨域携带cookie信息
-axios.defaults.withCredentials = true;
-
-//请求前拦截
-axios.interceptors.request.use(config => {
-        const checkSession = () => {
-            let headers = config.headers
-            let sessionId = localStorage.getItem("SessionId")
-            if (sessionId !== undefined || sessionId !== "") {
-                headers.SessionId = sessionId;
-            }
-        }
-        checkSession();
-
-        return config;
-    }, error => {
-        console.log(error);
-        return Promise.reject();
-    }
-);
-
-//响应后拦截
-axios.interceptors.response.use(res => {
-        // 2xx 范围内的状态码都会触发该函数。
-        // 对响应数据做点什么
-
-        return res;
-    },
-    error => {
-        // 超出 2xx 范围的状态码都会触发该函数。
-        // 对响应错误做点什么
-        let status = error.response.status;
-        if (status === 401) {
-            console.log("登录异常.....")
-            localStorage.clear();
-        }
-
-        return Promise.reject(error);
-    });
-
+//axios.defaults.withCredentials = true;
 
 
 
