@@ -3,7 +3,7 @@
     <div class="f-search">
       <img @click="backParentDir" src="../assets/回车按钮.png">
       <div class="search-content">
-        <input type="text" value="搜索..." @click.left="mouseClick">
+        <input type="text" value="搜索...ctrl+k" @click.left="mouseClick">
       </div>
       <img @click.left="filterClick($event)" src="../assets/filter.png">
     </div>
@@ -47,7 +47,7 @@
         <li
             v-for="sug in suggestionsList"
             @click="sugliClick(sug)"
-        >{{sug.result}}</li>
+        ><span v-html="sug.result"></span></li>
       </ul>
     </div>
     <div class="file-items-footer">
@@ -927,7 +927,7 @@ onMounted(() => {
     }
   });
   document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'f') {
+    if (e.ctrlKey && e.key === 'k') {
       e.preventDefault();
       const searchModal = document.getElementById('search-modal');
       searchModal.classList.remove('hide');
