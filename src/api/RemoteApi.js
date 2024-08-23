@@ -187,9 +187,10 @@ export const RemoteApi = {
         return await request.post(rurl+"/note-data/addAndUpdate", params);
     },
 
-    noteContentAddAndUpdateSync(params) {
-        return request.post(rurl+"/note-data/addAndUpdate", params);
+    async mindMapSave(params) {
+        return await request.post(rurl+"/note-data/mindmapSave", params, {requestType: 'form'});
     },
+
 
     /**
      * 获取笔记内容
@@ -229,5 +230,7 @@ export const RemoteApi = {
     async noteLogin(params) {
         return await request.post(rurl+"/user/login", params);
     },
+
+
 
 }

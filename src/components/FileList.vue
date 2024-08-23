@@ -27,6 +27,7 @@
           <span v-else-if="item.type==='txt'"><FileTextTwoTone /></span>
           <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
           <span v-else-if="item.type==='pdf'"><FilePdfTwoTone /></span>
+          <span v-else-if="item.type==='mindmap'"><BulbTwoTone  /></span>
           <span v-else><FileUnknownTwoTone /></span>
           <span class="item-name">{{ item.name }}</span>
         </div>
@@ -69,6 +70,7 @@ import {FilePdfTwoTone,FileMarkdownTwoTone,FileImageTwoTone,FolderTwoTone,FileWo
   FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
   FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
   PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined,FileTextOutlined,FileGifOutlined,
+  BulbTwoTone
 
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
@@ -642,7 +644,7 @@ const spaceMenus = shallowRef({
           content: '请输入文件名',
           isile: '1',
           type: 'wer',
-          opType: opType.createDir,
+          opType: opType.createNewFile,
           parentId: dirSelectKey //当前目录id
         }
         showInputModalConfirm(arg)
@@ -658,7 +660,23 @@ const spaceMenus = shallowRef({
           content: '请输入文件名',
           isile: '1',
           type: 'md',
-          opType: opType.createDir,
+          opType: opType.createNewFile,
+          parentId: dirSelectKey //当前目录id
+        }
+        showInputModalConfirm(arg)
+        return true;
+      }
+    },
+    {
+      label: "新文件(MindMap)",
+      tip: 'NewFile',
+      click: () => {
+        const arg = {
+          title: '新文件(MindMap)',
+          content: '请输入文件名',
+          isile: '1',
+          type: 'mindmap',
+          opType: opType.createNewFile,
           parentId: dirSelectKey //当前目录id
         }
         showInputModalConfirm(arg)

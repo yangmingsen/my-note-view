@@ -25,7 +25,8 @@
     "vue-demi": "^0.14.10",
     "vue-pdf-embed": "^2.1.0",
     "vue-router": "^4.4.3",
-    "vue3-menus": "^1.1.2"
+    "vue3-menus": "^1.1.2",
+    "vue3-mindmap": "^0.5.12"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",

@@ -10,6 +10,7 @@ import WordViewer from './components/WordViewer.vue'
 import ExcelViewer from './components/ExcelViewer.vue'
 import TinyMCEPanel from './components/TinyMCEPanel.vue'
 import MarkdownPreview from './components/MarkdownPreview.vue'
+import MindMapPanel from './components/MindMapPanel.vue'
 import {RemoteApi as noteApi} from "./api/RemoteApi"
 import {ConstansFlag as constFlag} from './js/ConstansFlag.js'
 import {ref} from 'vue'
@@ -21,10 +22,13 @@ const pdfNoteId = ref('')
 const wordNoteId = ref('')
 const excelNoteId = ref('')
 const textNoteId = ref('')
+const mindMapNoteId = ref('')
+
+const fileType = constFlag.fileType
 
 const editorFlag = {
   markdwon: 0, wangEditor: 1,  blank: 2, notSupport: 3, img: 4,
-  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9
+  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10
 }
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
@@ -43,34 +47,35 @@ const chooseEditor = (info) => {
     treeSelectKeys.value = info.parentId
   }
 
-
   const noteId = info.id
   if (info.isile === '0') {
     editorSelected.value = editorFlag.blank
   } else {
-    if (info.type === 'md') {
+    if (info.type === fileType.markdown) {
       editorSelected.value = editorFlag.markdwon
       mdNoteId.value = noteId
-    } else if (info.type === 'wer') {
+    } else if (info.type === fileType.wer) {
       werNoteId.value = noteId
       editorSelected.value = editorFlag.wangEditor
     } else if (
-        info.type === 'jpg'  ||
-        info.type === 'jpeg' ||
-        info.type === 'png') {
+        info.type === fileType.jpeg ||
+        info.type === fileType.jpg ||
+        info.type === fileType.png ) {
       imgNoteId.value = noteId
       editorSelected.value = editorFlag.img
-    } else if(info.type === 'pdf') {
+    } else if(info.type === fileType.pdf) {
       pdfNoteId.value = noteId
       editorSelected.value = editorFlag.pdf
-    } else if (info.type === 'docx') {
+    } else if (info.type === fileType.docx) {
       wordNoteId.value = noteId
       editorSelected.value = editorFlag.doc
-    } else if (info.type === 'xlsx') {
+    } else if (info.type === fileType.xlsx) {
       excelNoteId.value = noteId
       editorSelected.value = editorFlag.excel
-    }
-    else {
+    } else if (info.type === fileType.mindmap) {
+      mindMapNoteId.value = noteId
+      editorSelected.value = editorFlag.mindmap
+    } else {
       noteApi.noteContentCanPreview({id: noteId}).then(res => {
         const data = res.data
         if (data.success === true) {
@@ -125,6 +130,9 @@ const chooseEditor = (info) => {
       <MarkdownPreview
           :noteid="textNoteId"
           v-if="editorSelected === editorFlag.textPreview"></MarkdownPreview>
+      <MindMapPanel
+          :noteid="mindMapNoteId"
+          v-if="editorSelected === editorFlag.mindmap"></MindMapPanel>
       <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
     </div>
   </div>

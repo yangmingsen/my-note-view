@@ -7,7 +7,9 @@
           <input name="text1" id="text1" type="text" v-model="username" placeholder="Username" required>
         </div>
         <div class="wthree-field">
-          <input name="password" id="myInput" type="Password" v-model="password" placeholder="Password">
+          <input name="password" id="myInput" type="Password"  placeholder="Password"
+                 v-model="password"
+                 @keyup.enter="doLogin" >
         </div>
         <div class="wthree-field">
           <button type="button" class="btn" @click="doLogin">登 入</button>
@@ -41,8 +43,6 @@ const doLogin = () => {
     const resData = res.data;
     if (resData.respCode === 0) {
       message.success("登录成功...")
-      localStorage.setItem("username", loginData.username)
-      localStorage.setItem("password", loginData.password)
 
       localStorage.setItem("token", resData.datas.token)
       localStorage.setItem("username", resData.datas.username)
@@ -58,19 +58,6 @@ const doLogin = () => {
     console.error(err)
   })
 }
-
-onMounted(() => {
-  const usr = localStorage.getItem("username")
-  const psd = localStorage.getItem("password")
-  if (usr !== null) {
-    username.value = usr
-  }
-  if (psd !== null) {
-    password.value = psd
-  }
-
-})
-
 
 
 

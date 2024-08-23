@@ -15,7 +15,7 @@
          @click="clickManualItem({id: itemList.delFiles})"
          :class="itemSelected === itemList.delFiles ? 'item-active' : ''"
     >
-      <span><DeleteOutlined /> &nbsp;&nbsp;最近删除</span>
+      <span><DeleteTwoTone /> &nbsp;&nbsp;最近删除</span>
     </div>
     <div class="dir-list">
       <a-tree
@@ -37,7 +37,8 @@
 import {ref, shallowRef, createVNode, watch} from 'vue';
 import { menusEvent } from 'vue3-menus';
 import { message, Modal  } from 'ant-design-vue';
-import { PlusCircleOutlined, DeleteOutlined,HistoryOutlined } from '@ant-design/icons-vue';
+import { PlusCircleOutlined, DeleteOutlined,HistoryOutlined,
+  DeleteTwoTone} from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
 import {useItemSelectStore} from "../store/useItemSelectStore";
@@ -106,8 +107,8 @@ const showInputModalConfirm = (info) => {
       const iptE = document.querySelector("#d-input01");
       iptV = iptE.value;
 
-      if (info.opType == opType.createNewFile || info.opType == opType.createDir) {
-        if (info.isile == '0') { //目录
+      if (info.opType === opType.createNewFile || info.opType === opType.createDir) {
+        if (info.isile === '0') { //目录
           const submitData = {
             parentId: nid,
             name: iptV,
@@ -131,7 +132,7 @@ const showInputModalConfirm = (info) => {
         } else { //文件
 
         }
-      } else if (info.opType == opType.delNote) {
+      } else if (info.opType === opType.delNote) {
         noteApi.delNote({id: nid}).then(res => {
           const resData = res.data
           if (resData.respCode === 0) {
@@ -147,7 +148,7 @@ const showInputModalConfirm = (info) => {
           console.error(err)
         })
 
-      } else if (info.opType == opType.rename) {
+      } else if (info.opType === opType.rename) {
         const submitData = {id: nid, name: iptV}
         noteApi.update(submitData).then(res => {
           const resData = res.data
@@ -259,57 +260,6 @@ const loadData = () => {
 }
 //init load
 loadData();
-
-const testData = [
-  {
-    "title": "语文",
-    "key": "1791047945232097280",
-    "children": [
-
-    ]
-  },
-  {
-    "title": "数学",
-    "key": "1776580723956899840",
-    "children": [
-      {
-        "title": "测试文件002",
-        "key": "1776580766365507584",
-        "children": [
-
-        ]
-      }
-    ]
-  },
-  {
-    "title": "英语",
-    "key": "1778849867670564864",
-    "children": [
-
-    ]
-  },
-  {
-    "title": "地理",
-    "key": "1776249951911673856",
-    "children": [
-      {
-        "title": "地理自身01",
-        "key": "1776511036816392192",
-        "children": [
-
-        ]
-      }
-    ]
-  },
-  {
-    "title": "历史",
-    "key": "1778850249977180160",
-    "children": [
-
-    ]
-  }
-];
-const gData = ref(testData);
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3}
