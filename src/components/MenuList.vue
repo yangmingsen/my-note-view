@@ -78,10 +78,10 @@ const setTreeSelectKeys = (info) => {
   treeSelectKeys.value = info.ids
 }
 
-
 const itemSelectStore = useItemSelectStore();
 const itemSelected = ref(-1)
 const itemList = constFlag.itemList
+//当点击left1面板某个item时，通知文件列表组件进行动态更新
 const clickManualItem = (info) => {
   const itemId = info.id
   if (itemSelected.value !== itemId) {
