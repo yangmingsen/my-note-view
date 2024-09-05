@@ -39,6 +39,7 @@ const treeSelectKeys = ref('')
 const chooseEditor = (info) => {
   if (info.curMenuItemType === constFlag.itemList.delFiles) { //如果是menu组件选中的是删除item项,则不展示内容
     editorSelected.value = editorFlag.blank
+    showNoteTitleName.value = false
     return
   }
 
@@ -48,8 +49,11 @@ const chooseEditor = (info) => {
   }
 
   const noteId = info.id
+  noteTitleName.value = info.name //更新标题
+  showNoteTitleName.value = true
   if (info.isile === '0') {
     editorSelected.value = editorFlag.blank
+    showNoteTitleName.value = false
   } else {
     if (info.type === fileType.markdown) {
       editorSelected.value = editorFlag.markdwon
@@ -89,8 +93,10 @@ const chooseEditor = (info) => {
       })
     }
   }
-
 }
+
+const noteTitleName = ref('')
+const showNoteTitleName = ref(false)
 
 </script>
 
@@ -103,6 +109,7 @@ const chooseEditor = (info) => {
       <FileList @choose-note="(info) => {chooseEditor(info)}"></FileList>
     </div>
     <div class="content">
+      <h2 v-if="showNoteTitleName">{{noteTitleName}}</h2>
       <MarkdownEditorPanel
           :noteid="mdNoteId"
           v-if="editorSelected === editorFlag.markdwon">
@@ -143,7 +150,7 @@ const chooseEditor = (info) => {
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr 4fr;
-  background-image: url('http://api.note.yms.top/note/file/view?id=66d86b17afa1156a94f4f866');
+  background-image: url('http://api.note.yms.top/note/file/view?id=66d9c9fe1d085541cc962801');
   background-size: cover; /* 使图片覆盖整个区域 */
   min-height: 100vh;
 }

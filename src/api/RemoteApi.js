@@ -37,7 +37,7 @@ export const RemoteApi = {
      * 获取子目录数据(目录和文件)
      */
     async getNoteList(params) {
-        return await request.get(rurl+"/note-index/sub", params);
+        return await request.post(rurl+"/note-index/sub", params, {requestType: "form"});
     },
 
 
@@ -101,7 +101,7 @@ export const RemoteApi = {
      * @returns {Promise<AxiosResponse<any>>}
      */
     async getRecentFiles(params) {
-        return await request.get(rurl+"/note-index/getRecentFiles", params);
+        return await request.post(rurl+"/note-index/getRecentFiles", params, {requestType: "form"});
     },
 
     /**
@@ -110,7 +110,7 @@ export const RemoteApi = {
      * @returns {Promise<AxiosResponse<any>>}
      */
     async getDeletedFiles(params) {
-        return await request.get(rurl+"/note-index/getDeletedFiles", params);
+        return await request.post(rurl+"/note-index/getDeletedFiles", params, {requestType: "form"});
     },
 
     async allDestroy(params) {

@@ -12,7 +12,7 @@
          :class="item.id === fileSelectKey ? 'active' : ''"
          @click="oneceClick($emit, item)"
          @dblclick="doubleClick(item)"
-         @contextmenu="itemClick($event, item)"
+         @contextmenu="itemRightClick($event, item)"
       >
         <div>
           <span v-if="item.isile === '0'"><FolderTwoTone /></span>
@@ -83,7 +83,7 @@ import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const emitT = defineEmits(['choose-note'])
 
-//搜索关键字
+//搜索关键字。 搜索功能实现
 const keyword = ref('')
 let timer = null
 let keyLen = false
@@ -108,13 +108,11 @@ const searchEvent = () => {
     }
   }
 }
-
 const clearTimer = () => {
   if (timer) {
     clearTimeout(timer)
   }
 }
-
 const performSearch = (info) => {
   const query = info.searchContent;
   noteApi.findNoteByCondition({searchContent: query}).then(res => {
@@ -172,7 +170,7 @@ const spaceClick = (event) => {
 }
 
 //右击某个项目区域时显示的菜单
-const itemClick = (event, item) => {
+const itemRightClick = (event, item) => {
   if (menuCompKeySelected === itemList.treeFiles) {
     menusEvent(event, fileItemMenus.value, item)
   } else if (menuCompKeySelected === itemList.delFiles) {
@@ -224,6 +222,7 @@ selectStore.$subscribe((mutation, state) => {
 
 //menu组件当前选中的item项
 const itemList = constFlag.itemList
+//当前left面板选中的item
 let menuCompKeySelected = itemList.treeFiles
 //监听menu组件item(最近删除,tree树,最近更新...)改变情况
 itemSelectStore.$subscribe((mutation, state) => {
@@ -237,9 +236,23 @@ itemSelectStore.$subscribe((mutation, state) => {
   }
 })
 
+const sortType = {createTime: 0, updateTime: 1, fileName: 2, fileSize: 3}
+
+//保存asc或desc信息。采用自增模除2 实现 0 desc, 1 asc
+const itemAscType = {
+  recentFile: 0, recentFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0},
+  delFile: 0,  delFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0},
+  treeFile: 0, treeFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0}
+}
+//保存当前left组件item项的排序信息
+const itemSortType = {recentFile: sortType.createTime, delFile: sortType.createTime, treeFile: sortType.createTime}
+
 //更新最近文件列表
 const updateRecentFileLists = () => {
-  noteApi.getRecentFiles().then(res => {
+  const para = {}
+  para.sortBy = itemSortType.recentFile
+  para.asc = itemAscType.recentFile
+  noteApi.getRecentFiles(para).then(res => {
     const recentFileDatas = res.data.datas
     setFileListData({data: recentFileDatas})
   }).catch(err => {
@@ -250,7 +263,10 @@ const updateRecentFileLists = () => {
 
 //更新已删除的文件列表
 const updateDeletedFileLists = () => {
-  noteApi.getDeletedFiles().then(res => {
+  const para = {}
+  para.sortBy = itemSortType.delFile
+  para.asc = itemAscType.delFile
+  noteApi.getDeletedFiles(para).then(res => {
     const delFileDatas = res.data.datas
     setFileListData({data: delFileDatas})
   }).catch(err => {
@@ -322,6 +338,9 @@ const doubleClick = (info) => {
 
 //更新文件列表
 const updateFileList = (para) => {
+  para.sortBy = itemSortType.treeFile
+  para.asc = itemAscType.treeFile
+  para.parentId = para.nid
   noteApi.getNoteList(para).then((res) => {
     const data = res.data.datas
     setFileListData({data: data})
@@ -330,40 +349,93 @@ const updateFileList = (para) => {
     console.error(err)
   })
 }
-
+//自动更新文件列表
 const autoUpdateFileList = () => {
   updateFileList({nid: dirSelectKey})
 }
 
+//过滤菜单
 const filterMenus = shallowRef({
   menus: [
     {
       label: "创建时间",
       tip: 'CreateTime',
       click: () => {
-        console.log("创建时间")
-        return true;
+        if (menuCompKeySelected === itemList.treeFiles) {
+          itemSortType.treeFile = sortType.createTime
+          itemAscType.treeFile = (itemAscType.treeFileClickCnt.createTime++)%2
+          autoUpdateFileList()
+        } else if (menuCompKeySelected === itemList.delFiles) {
+          itemSortType.delFile = sortType.createTime
+          itemAscType.delFile = (itemAscType.delFileClickCnt.createTime++)%2
+          updateDeletedFileLists()
+        } else if (menuCompKeySelected === itemList.rencentFiles) {
+          itemSortType.recentFile = sortType.createTime
+          itemAscType.recentFile = (itemAscType.recentFileClickCnt.createTime++)%2
+          updateRecentFileLists()
+        }
+        return true
       }
     },
     {
       label: "修改时间",
       tip: 'UpdateTime',
       click: () => {
-        return false;
+        if (menuCompKeySelected === itemList.treeFiles) {
+          itemSortType.treeFile = sortType.updateTime
+          itemAscType.treeFile = (itemAscType.treeFileClickCnt.updateTime++)%2
+          autoUpdateFileList()
+        } else if (menuCompKeySelected === itemList.delFiles) {
+          itemSortType.delFile = sortType.updateTime
+          itemAscType.delFile = (itemAscType.delFileClickCnt.updateTime++)%2
+          updateDeletedFileLists()
+        } else if (menuCompKeySelected === itemList.rencentFiles) {
+          itemSortType.recentFile = sortType.updateTime
+          itemAscType.recentFile = (itemAscType.recentFileClickCnt.updateTime++)%2
+          updateRecentFileLists()
+        }
+        return true
       }
     },
     {
       label: "文件名称",
       tip: 'FileName',
       click: () => {
-        return false;
+        if (menuCompKeySelected === itemList.treeFiles) {
+          itemSortType.treeFile = sortType.fileName
+          itemAscType.treeFile = (itemAscType.treeFileClickCnt.fileName++)%2
+          autoUpdateFileList()
+        } else if (menuCompKeySelected === itemList.delFiles) {
+          itemSortType.delFile = sortType.fileName
+          itemAscType.delFile = (itemAscType.delFileClickCnt.fileName++)%2
+          updateDeletedFileLists()
+        } else if (menuCompKeySelected === itemList.rencentFiles) {
+          itemSortType.recentFile = sortType.fileName
+          itemAscType.recentFile = (itemAscType.recentFileClickCnt.fileName++)%2
+          updateRecentFileLists()
+        }
+
+        return true
       }
     },
     {
       label: "文件大小",
       tip: 'FileSize',
       click: () => {
-        return false;
+        if (menuCompKeySelected === itemList.treeFiles) {
+          itemSortType.treeFile = sortType.fileSize
+          itemAscType.treeFile = (itemAscType.treeFileClickCnt.fileSize++)%2
+          autoUpdateFileList()
+        } else if (menuCompKeySelected === itemList.delFiles) {
+          itemSortType.delFile = sortType.fileSize
+          itemAscType.delFile = (itemAscType.delFileClickCnt.fileSize++)%2
+          updateDeletedFileLists()
+        } else if (menuCompKeySelected === itemList.rencentFiles) {
+          itemSortType.recentFile = sortType.fileSize
+          itemAscType.recentFile = (itemAscType.recentFileClickCnt.fileSize++)%2
+          updateRecentFileLists()
+        }
+        return true
       }
     }
   ]
@@ -394,17 +466,29 @@ const showInputModalConfirm = (info) => {
           name: iptV,
           isile: info.isile
         }
-        if (info.isile == '1') { //文件
+        if (info.isile === '1') { //文件
           submitData.type = info.type
         }
         noteApi.addNote(submitData).then(res => {
           const resData = res.data
           if (resData.respCode === 0) {
             message.success("操作成功")
-            const info = {nid: parentId}
-            updateFileList(info)
-            if (submitData.isile == '0') {//是目录时更新父tree
+            const upPara = {nid: parentId}
+            //新建成功后更新当前文件列表
+            updateFileList(upPara)
+            if (submitData.isile === '0') {//是目录时更新父tree
               notifyParentDirUpdate()
+            }
+            //如果当前创建的是文件。就更新主editor面板为当前新建的文件
+            if (info.isile === '1') {
+              const noteIndexData  = resData.datas
+
+              //告诉主App组件当前menu组件选中的item情况
+              noteIndexData.curMenuItemType = menuCompKeySelected
+              console.log(noteIndexData)
+              emitT('choose-note', noteIndexData)
+              //更新当前选中的key
+              fileSelectKey.value = noteIndexData.id
             }
           } else {
             message.warning("操作失败")
@@ -955,7 +1039,6 @@ onMounted(() => {
   });
 
 })
-
 
 </script>
 
