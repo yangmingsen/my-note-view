@@ -37,17 +37,13 @@ const data = ref([{name: '新建标题01', children: []}])
 const reLoadF = ref(false)
 
 watch(() => props.noteid, (noteidNew, noteidOld) => {
+  reLoadF.value = false
   noteApi.noteContentGet({id: noteidNew}).then(res => {
     const resData = res.data
     if (resData.respCode === 0) {
-      reLoadF.value = false
       let jsObj = JSON.parse(resData.datas.content)
-      data.value = []
-      for (let dt of jsObj.content) {
-        data.value.push(dt)
-      }
+      data.value = jsObj.content
       reLoadF.value = true
-      console.log(jsObj)
     }
   }).catch(err => {
     message.error("获取预览内容信息失败")
