@@ -143,7 +143,7 @@ const chooseEditor = (info) => {
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr 4fr;
-  background-image: url('http://api.note.yms.top/note/file/view?id=66b64d790bc2890980f632c2');
+  background-image: url('http://api.note.yms.top/note/file/view?id=66d86b17afa1156a94f4f866');
   background-size: cover; /* 使图片覆盖整个区域 */
   min-height: 100vh;
 }
