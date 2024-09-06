@@ -121,6 +121,13 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-index/allRecover", params);
     },
 
+    /**
+     * 笔记移动
+     */
+    async noteMove(params) {
+        return await request.post(rurl+"/note-index/updateMove", params, {requestType: "form"});
+    },
+
 
 
     /**

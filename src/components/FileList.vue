@@ -9,10 +9,17 @@
     </div>
     <div id="drop-file-area"   class="file-items" @contextmenu="spaceClick($event)">
       <div v-for="item in fileListData"
-         :class="item.id === fileSelectKey ? 'active' : ''"
+           :draggable="canDoDrag"
+           class="note-item"
+         :class="[item.id === fileSelectKey ? 'active' : '', item.id === dragingStyId ? 'dragging': '', item.id === dragOverStyId ? 'drag-over': '']"
          @click="oneceClick($emit, item)"
          @dblclick="doubleClick(item)"
          @contextmenu="itemRightClick($event, item)"
+           @dragstart="doDragstart($event, item)"
+           @dragend="doDragend($event)"
+           @dragover="doDragover($event, item)"
+           @dragleave="doDragleave($event)"
+           @drop="doDrop($event, item)"
       >
         <div>
           <span v-if="item.isile === '0'"><FolderTwoTone /></span>
@@ -227,6 +234,7 @@ let menuCompKeySelected = itemList.treeFiles
 //监听menu组件item(最近删除,tree树,最近更新...)改变情况
 itemSelectStore.$subscribe((mutation, state) => {
   const curKey = menuCompKeySelected = state.itemSelectKey
+  curKey === itemList.treeFiles ? canDoDrag.value = true : canDoDrag.value = false
   if (curKey !== undefined) {
     if (curKey === itemList.rencentFiles) {
       updateRecentFileLists()
@@ -946,6 +954,63 @@ const readClipboardData = () => {
   })
 }
 
+
+//检查当前环境是否可拖拽文件移动
+const checkCanDrag = () => {
+  return menuCompKeySelected === itemList.treeFiles
+}
+//当前是否开启笔记文件拖拽
+const canDoDrag = ref(true)
+//笔记拖拽移动
+const dragingStyId = ref('')
+const dragOverStyId = ref('')
+let dragTargetInfo = null
+//---drag
+// 开始拖动
+const doDragstart = (e, item) => {
+  dragTargetInfo = item
+  dragingStyId.value = item.id
+}
+// 结束拖动
+const doDragend = (e) => {
+  dragingStyId.value = ''
+  dragTargetInfo = null
+}
+// 允许拖动目标悬停
+const doDragover = (e, item) => {
+  e.preventDefault();
+  dragOverStyId.value = item.id
+}
+// 拖动离开目标
+const doDragleave = (e) => {
+  dragOverStyId.value = ''
+}
+// 放下拖动的文件
+const doDrop = (e, toTarget) => {
+  e.preventDefault();
+  dragOverStyId.value = ''
+  if (dragTargetInfo && dragTargetInfo !== toTarget) {
+    //isile: o dir, 1 file
+    if (toTarget.isile === '1') {
+      message.warn("目标必须是目录")
+      return
+    }
+    noteApi.noteMove({fromId: dragTargetInfo.id, toId: toTarget.id}).then(res => {
+      const resData = res.data;
+      if (resData.respCode === 0) {
+        message.success("移动成功")
+        autoUpdateFileList()
+      } else {
+        message.error("移动失败...")
+      }
+    }).catch(err => {
+      message.error("移动错误")
+      console.error(err)
+    })
+  }
+}
+
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in byte
 onMounted(() => {
   document.getElementById('file-upload').addEventListener('change', function (event) {
@@ -1084,6 +1149,13 @@ onMounted(() => {
 .file-items div:hover {
   background-color: antiquewhite;
   cursor: default;
+}
+
+.note-item.dragging {
+  opacity: 0.5;
+}
+.note-item.drag-over {
+  background-color: #b0e0e6;
 }
 
 .active {

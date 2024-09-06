@@ -171,6 +171,8 @@ const showNoteTitleName = ref(false)
 
 .content {
   background-color: rgba(255, 255, 255, 0.8); /* 半透明背景颜色 */
+  /* 解决编辑面板x方向内容太多时, 造成的布局失效问题*/
+  overflow-x: auto;
 }
 
 </style>

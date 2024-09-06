@@ -36,7 +36,7 @@ let taskRef = undefined;
 onMounted(() => {
   taskRef = setInterval(() => {
     saveContent({id: props.noteid, content: getCurContent()})
-  }, 30*1000)
+  }, 60*1000)
 })
 
 
