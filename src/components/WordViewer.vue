@@ -2,7 +2,7 @@
   <div class="word-sty">
     <vue-office-docx
         :src="srcValue"
-        style="height: 100vh;"
+        style="height: 95vh;"
         @rendered="renderedHandler"
         @error="errorHandler"
     />

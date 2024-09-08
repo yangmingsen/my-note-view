@@ -74,7 +74,7 @@ const saveData = () => {
 <style scoped>
 
 .mind-map {
-  height: 100vh;
+  height: 80vh;
 }
 
 </style>

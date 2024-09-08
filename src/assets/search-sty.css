@@ -43,7 +43,7 @@
 .search-modal li {
     padding: 10px 20px;
     cursor: pointer;
-    transition: background 0.2s ease-in-out;
+    transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .search-li {
@@ -54,6 +54,11 @@
 
 .search-modal li:hover {
     background-color: #c51717;
+}
+
+.search-modal li:hover, .search-modal li.selected {
+    background-color: #f8f9fa;
+    box-shadow: inset 5px 0 0 #4285f4;
 }
 
 /* 添加搜索框的弹出动画 */

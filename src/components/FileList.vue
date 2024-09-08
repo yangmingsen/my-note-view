@@ -701,7 +701,8 @@ const fileItemMenus = shallowRef({
           return true
         }
         if (arg.type === 'md' ||
-            arg.type === 'wer'
+            arg.type === 'wer' ||
+            arg.type === 'mindmap'
 
         ) {
           message.warning("不支持Md,Wer文件下载")
@@ -1110,20 +1111,8 @@ onMounted(() => {
 <style scoped>
 @import "../assets/search-sty.css";
 
-
-.search-modal li {
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.search-modal li:hover, .search-modal li.selected {
-  background-color: #f8f9fa;
-  box-shadow: inset 5px 0 0 #4285f4;
-}
-
 .files-scope {
-  height: 100%;
+  height: 100vh;
   position: relative;
 }
 
@@ -1173,7 +1162,7 @@ onMounted(() => {
 
 .file-items-footer {
   /*background-color: #cbc8c8;*/
-  background-color: rgba(203,200,200, 0.8);
+  /*background-color: rgba(203,200,200, 0.8);*/
   position: absolute;
   width: 100%;
   bottom: 0

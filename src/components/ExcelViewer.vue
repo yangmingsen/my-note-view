@@ -3,7 +3,7 @@
     <vue-office-excel
         :src="excelSrc"
         :options="excelOption"
-        style="height: 100vh;"
+        style="height: 95vh;"
         @rendered="renderedHandler"
         @error="errorHandler"
     />
