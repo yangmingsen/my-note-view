@@ -1,21 +1,45 @@
 <template>
   <v-md-editor
       v-model="dataText"
-      height="900px"
+      :mode="editorMode"
+      height="95vh"
       :disabled-menus="[]"
       @save="manualSave"
       @upload-image="handleUploadImage"
   ></v-md-editor>
+  <a-float-button-group
+      v-if="showPreviewFun"
+      trigger="click" type="primary" :style="{ right: '94px' }">
+    <a-float-button @click="doEditor">
+      <template #icon>
+        <EditOutlined />
+      </template>
+    </a-float-button>
+  </a-float-button-group>
 </template>
 
 <script setup>
 import {ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { message  } from 'ant-design-vue'
+import { EditOutlined, CompressOutlined } from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi"
 import {hex_md5} from '../js/encryptionAlgorithm.js'
 
 
 const props = defineProps(['noteid'])
+
+
+const editorModeConst = {edit: 'edit', editable: 'editable', preview: 'preview'}
+//模式, 默认预览
+const editorMode = ref(editorModeConst.preview)
+
+// 是否显示预览模式下的按钮
+const showPreviewFun = ref(true)
+
+const doEditor = () => {
+  editorMode.value = editorModeConst.editable
+  showPreviewFun.value = false
+}
 
 //数据
 const dataText = ref('')
@@ -27,7 +51,6 @@ onMounted(() => {
       saveContent({id: props.noteid, content: dataText.value})
   }, 90*1000)
 })
-
 
 // 组件销毁时
 onBeforeUnmount(() => {
@@ -73,6 +96,7 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
 
 },{immediate: true})
 
+//处理文件上传
 const handleUploadImage = (event, insertImage, files) => {
   // 拿到 files 之后上传到文件服务器，然后向编辑框中插入对应的内容
   const file = files[0]
