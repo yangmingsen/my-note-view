@@ -42,6 +42,6 @@ const setContainerHeight = () => {
 
 <style scoped>
 .text-preview {
-  overflow-y: auto;
+
 }
 </style>

@@ -1,3 +1,4 @@
+<!--
 <template>
 <div  class="tmce-sty">
   <Editor
@@ -20,3 +21,4 @@ import Editor from '@tinymce/tinymce-vue'
   max-width: 100%;
 }
 </style>
+-->

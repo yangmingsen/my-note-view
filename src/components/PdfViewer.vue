@@ -36,8 +36,7 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
 
 <style scoped>
  .pdf-sty {
-    max-width: 100%;
-    height: 900px;
-    overflow-y: auto;
+    height: 95vh;
+
  }
 </style>

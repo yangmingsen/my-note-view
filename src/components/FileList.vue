@@ -68,6 +68,9 @@
       <span>一共：{{ totalFileSize }}个项目</span>
     </div>
   </div>
+  <a-modal v-model:open="progressOpen" title="上传进度">
+    <a-progress :percent="progressPercent" />
+  </a-modal>
 </template>
 
 <script setup>
@@ -1011,36 +1014,71 @@ const doDrop = (e, toTarget) => {
   }
 }
 
+const progressOpen = ref(false)
+const progressPercent =ref(0)
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in byte
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 10MB in byte
 onMounted(() => {
   document.getElementById('file-upload').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
-        message.warning('File is too large. Maximum size allowed is 10MB.');
+        message.warning('File is too large. Maximum size allowed is 50MB.');
         return;
       }
       const formData = new FormData();
       formData.append('file', file);
       formData.append('parentId', dirSelectKey);
       const reqUrl = constFlag.apiUrl+'/file/uploadNote'
-      fetch(reqUrl, { // 替换成你的上传接口
-        method: 'POST',
-        body: formData,
-        headers: {Authorization: localStorage.getItem("token")}
-      })
-          .then(response => response.json())
-          .then(data => {
-            message.success("上传文件成功")
-            // console.log('File uploaded successfully:', data);
-            //更新文件列表
-            updateFileList({nid: dirSelectKey})
-          })
-          .catch(error => {
-            message.error("上传文件失败")
-            console.error('Error uploading file:', error);
-          });
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', reqUrl); // 替换成你的上传接口
+      // 设置请求头并添加token
+      xhr.setRequestHeader('Authorization', localStorage.getItem("token"));
+      // 显示进度条
+      progressOpen.value = true
+      progressPercent.value = 0
+
+      // 监听上传进度
+      xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+          progressPercent.value = (event.loaded / event.total) * 100;
+        }
+      };
+
+      // 上传完成
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          message.success("上传成功")
+          autoUpdateFileList()
+        } else {
+          message.error("drop文件上传失败")
+        }
+        progressOpen.value = false
+        progressPercent.value = 0
+      };
+
+      // 发送文件
+      xhr.send(formData);
+
+
+
+      // fetch(reqUrl, { // 替换成你的上传接口
+      //   method: 'POST',
+      //   body: formData,
+      //   headers: {Authorization: localStorage.getItem("token")}
+      // })
+      //     .then(response => response.json())
+      //     .then(data => {
+      //       message.success("上传文件成功")
+      //       // console.log('File uploaded successfully:', data);
+      //       //更新文件列表
+      //       updateFileList({nid: dirSelectKey})
+      //     })
+      //     .catch(error => {
+      //       message.error("上传文件失败")
+      //       console.error('Error uploading file:', error);
+      //     });
     }
   });
 
@@ -1073,16 +1111,51 @@ onMounted(() => {
     let files = event.dataTransfer.files;
     if (files.length > 0) {
       // 处理文件上传
-      noteApi.uploadNote({file: files[0], parentId: dirSelectKey}).then(res => {
-        const resData = res.data
-        if (resData.respCode === 0) {
-          autoUpdateFileList()
-          message.success("上传成功")
+      const formData = new FormData();
+      formData.append('parentId', dirSelectKey);
+      formData.append('file', files[0]);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', constFlag.apiUrl+"/file/uploadNote"); // 替换成你的上传接口
+      // 设置请求头并添加token
+      xhr.setRequestHeader('Authorization', localStorage.getItem("token"));
+      // 显示进度条
+      progressOpen.value = true
+      progressPercent.value = 0
+
+      // 监听上传进度
+      xhr.upload.onprogress = function(event) {
+        if (event.lengthComputable) {
+          progressPercent.value = (event.loaded / event.total) * 100;
         }
-      }).catch(err => {
-        console.error(err)
-        message.error("drop文件上传失败")
-      })
+      };
+
+      // 上传完成
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          message.success("上传成功")
+          autoUpdateFileList()
+        } else {
+          message.error("drop文件上传失败")
+        }
+        progressOpen.value = false
+        progressPercent.value = 0
+      };
+
+      // 发送文件
+      xhr.send(formData);
+
+
+      // noteApi.uploadNote({file: files[0], parentId: dirSelectKey}).then(res => {
+      //   const resData = res.data
+      //   if (resData.respCode === 0) {
+      //     autoUpdateFileList()
+      //     message.success("上传成功")
+      //   }
+      // }).catch(err => {
+      //   console.error(err)
+      //   message.error("drop文件上传失败")
+      // })
     }
   });
 

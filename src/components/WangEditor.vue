@@ -141,16 +141,22 @@ const getCurContent = () => {
   const htmlContent = editor.getHtml()
   return htmlContent
 }
+const getTextContent = () => {
+  const editor = editorRef.value
+  const textContent = editor.getText()
+  return textContent
+}
 
 watch(() => props.noteid,  (noteidNew, noteidOld) => {
   noteApi.noteContentGet({id: noteidNew}).then(res => {
     if (noteidOld != undefined) {
-      const id = noteidOld;
-      const oldData = getCurContent();
+      const id = noteidOld
+      const oldData = getCurContent()
+      const textContent = getTextContent()
       const latestVersion =  hex_md5(oldData)
       //如果没有修改过就不同步
       if (latestVersion != serverDataVersion) {
-        const para = {id: id, content: oldData}
+        const para = {id: id, content: oldData, textContent: textContent, type: "wer"}
         noteApi.noteContentAddAndUpdate(para).then(res => {
           message.success("同步成功")
         }).catch(err => {
@@ -183,6 +189,7 @@ let serverDataVersion = '';
 const saveContent = (info) => {
   const noteId = info.id
   const syncData = getCurContent()
+  const textContent = getTextContent();
   const latestVersion =  hex_md5(syncData)
   //如果没有修改过就不同步
   if (latestVersion == serverDataVersion) {
@@ -190,7 +197,7 @@ const saveContent = (info) => {
     return
   }
   serverDataVersion = latestVersion
-  const para = {id: noteId, content: syncData}
+  const para = {id: noteId, content: syncData, textContent: textContent, type: "wer"}
   noteApi.noteContentAddAndUpdate(para).then(res => {
     message.success("同步成功")
   }).catch(err => {
