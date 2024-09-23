@@ -45,6 +45,6 @@ const errorHandler = () => {
 
 <style scoped>
 .word-sty {
-  max-width: 100%;
+  /*max-width: 100%;*/
 }
 </style>

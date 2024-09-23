@@ -287,7 +287,8 @@ const clickShowTips = () => {
   min-height: 95vh;
 }
 .content-scope-component {
-  /*background-color: #4285f4;*/
+  min-width: 100%;
+  overflow-y: auto;
 }
 .content-scope-fun {
   display: flex;
@@ -295,8 +296,7 @@ const clickShowTips = () => {
   align-items: center;    /* 水平居中对齐 */
   justify-content: center; /* 垂直居中对齐 */
   position: relative;
-  border: solid 1px black;
-  height: 100%;
+  height: 95vh;
 
 }
 .main-layout-change {

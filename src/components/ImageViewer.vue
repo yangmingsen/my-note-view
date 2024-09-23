@@ -43,7 +43,7 @@ const show = () => {
 
 <style scoped>
 .img-cls {
-  height: 900px;
+  height: 95vh;
   overflow-y: hidden;
 }
 

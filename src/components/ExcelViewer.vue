@@ -56,6 +56,5 @@ const errorHandler = () => {
 
 <style scoped>
 .excel-sty {
-  max-width: 100%;
 }
 </style>
