@@ -36,7 +36,7 @@ watch(() => props.noteid, (noteidNew, noteidOld) => {
 
 <style scoped>
  .pdf-sty {
-    height: 95vh;
+    height: 90vh;
 
  }
 </style>

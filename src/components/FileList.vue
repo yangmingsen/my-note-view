@@ -215,10 +215,11 @@ const setFileListData = (info) => {
 
 let addNoteUpdate = 0; //see useSelectStore.js
 //订阅监听tree的key变更
+let tmpChangeKey = '';
 selectStore.$subscribe((mutation, state) => {
-  const changeKey = state.dirSelectKey;
-  if (changeKey !== undefined && dirSelectKey !== changeKey) {
-    dirSelectKey = changeKey
+  const changeKey = state.dirSelectKey
+  if (changeKey !== undefined && tmpChangeKey !== changeKey) {
+    dirSelectKey = tmpChangeKey = changeKey
     updateFileList({"nid": dirSelectKey});
     //更新面包线
     updateBreadcrumb({id: dirSelectKey})
@@ -920,7 +921,8 @@ const readClipboardData = () => {
             const reqUrl = constFlag.apiUrl+'/file/uploadNote'
             fetch(reqUrl, {
               method: 'POST',
-              body: formData
+              body: formData,
+              headers: {Authorization: localStorage.getItem("token")}
             }).then(response => response.json())
                 .then(data => {
                   message.success("上传成功...")

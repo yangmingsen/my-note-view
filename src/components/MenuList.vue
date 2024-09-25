@@ -218,7 +218,7 @@ const clickKey = (key) => {
 //监听子目录变化，及时更新tree
 let parentDirUpdate = 0;
 selectStore.$subscribe((mutation, state) =>{
-  if (state.parentDirUpdate != undefined && parentDirUpdate != state.parentDirUpdate) {
+  if (state.parentDirUpdate !== undefined && parentDirUpdate !== state.parentDirUpdate) {
     parentDirUpdate = state.parentDirUpdate
     loadData()
   }
