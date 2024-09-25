@@ -36,6 +36,7 @@ const editorSelected = ref(editorFlag.blank)
 //当前选中的父目录, 由FileList组件传入, 通知到MenuList组件
 const treeSelectKeys = ref('')
 
+//动态选择当前合适的预览或者编辑组件
 const chooseEditor = (info) => {
   if (info.curMenuItemType === constFlag.itemList.delFiles) { //如果是menu组件选中的是删除item项,则不展示内容
     editorSelected.value = editorFlag.blank
@@ -191,7 +192,10 @@ const clickShowTips = () => {
             <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
           </div>
           <div class="content-scope-fun">
-            <div  class="main-layout-change" @click="clickShowTips">
+            <div class="content-fun">
+              <img src="./assets/export-img.png">
+            </div>
+            <div class="main-layout-change" @click="clickShowTips">
               <img src="./assets/layout-3.png">
             </div>
           </div>
@@ -294,11 +298,25 @@ const clickShowTips = () => {
   display: flex;
   flex-direction: column; /* 垂直方向排列图片 */
   align-items: center;    /* 水平居中对齐 */
-  justify-content: center; /* 垂直居中对齐 */
+  /*justify-content: center; !* 垂直居中对齐 *!*/
   position: relative;
   height: 95vh;
 
 }
+
+.content-fun {
+  bottom: 30px;
+  height: 31px;
+  width: 31px;
+  background-color: #f0f0f0; /* 默认背景色 */
+  border: 1px solid #ddd; /* 默认边框 */
+  border-radius: 1px; /* 圆角 */
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 阴影 */
+  transition: all 0.2s ease; /* 平滑过渡效果 */
+  text-align: center;
+}
+
 .main-layout-change {
   position: absolute;
   bottom: 30px;
@@ -313,13 +331,13 @@ const clickShowTips = () => {
   text-align: center;
 }
 /* 鼠标悬停时 */
-.main-layout-change:hover {
+.main-layout-change, .content-fun:hover {
   background-color: #e0e0e0; /* 鼠标悬停背景色 */
   border-color: #bbb; /* 边框颜色变化 */
 }
 
 /* 点击时的状态 */
-.main-layout-change:active {
+.main-layout-change, .content-fun:active {
   background-color: #ccc; /* 点击时背景色 */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 阴影减弱 */
   transform: scale(0.95); /* 点击时缩小按钮，模拟按压效果 */
