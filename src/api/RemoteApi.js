@@ -239,5 +239,41 @@ export const RemoteApi = {
     },
 
 
+    /**
+     * 更新用户个性配置
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async updateUserConfig(params) {
+        return await request.post(rurl+"/custom-conf/update-user-config", params, {requestType: 'form'});
+    },
+
+    /**
+     * 查找用户个性配置
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async findUserConfig(params) {
+        return await request.get(rurl+"/custom-conf/find-user-conf", params);
+    },
+
+
+    /**
+     * 加密笔记或文件夹验证接口
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async notePasswordAuth(params) {
+        return await request.post(rurl+"/note-index/note-pass-auth", params, {requestType: 'form'});
+    },
+
+    /**
+     * 设置当前笔记需要阅读密码
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async encryptedReadNote(params) {
+        return await request.get(rurl+"/note-index/encrypted-read-note", params, );
+    },
 
 }

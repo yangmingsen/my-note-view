@@ -23,6 +23,7 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { message  } from 'ant-design-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi";
 import {hex_md5} from '../js/encryptionAlgorithm.js'
+import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const props = defineProps(['noteid'])
 
@@ -45,7 +46,7 @@ const editorConfig = {placeholder: '请输入内容...',  MENU_CONF: {}}
 const mode = ref('default') // 或 'simple'
 // 修改 uploadImage 菜单配置
 editorConfig.MENU_CONF['uploadImage'] = {
-  server: 'http://api.note.yms.top/note/file/upload',
+  server: constFlag.apiUrl+'/file/upload',
   fieldName: 'file',
   // 继续写其他配置...
   // 单个文件的最大体积限制，默认为 2M

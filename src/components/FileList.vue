@@ -21,22 +21,29 @@
            @dragleave="doDragleave($event)"
            @drop="doDrop($event, item)"
       >
-        <div>
-          <span v-if="item.isile === '0'"><FolderTwoTone /></span>
-          <span v-else-if="item.type==='md'"><FileMarkdownTwoTone /></span>
-          <span v-else-if="item.type==='wer'"><FileTwoTone /></span>
-          <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelTwoTone /></span>
-          <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordTwoTone/></span>
-          <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptTwoTone /></span>
-          <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
-          <span v-else-if="item.type==='png'"><FileImageTwoTone/></span>
-          <span v-else-if="item.type==='gif'"><FileGifOutlined /></span>
-          <span v-else-if="item.type==='txt'"><FileTextTwoTone /></span>
-          <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
-          <span v-else-if="item.type==='pdf'"><FilePdfTwoTone /></span>
-          <span v-else-if="item.type==='mindmap'"><BulbTwoTone  /></span>
-          <span v-else><FileUnknownTwoTone /></span>
-          <span class="item-name">{{ item.name }}</span>
+        <div class="item-meta-info">
+          <div class="item-meta-info-type">
+            <span v-if="item.isile === '0'"><FolderTwoTone /></span>
+            <span v-else-if="item.type==='md'"><FileMarkdownTwoTone /></span>
+            <span v-else-if="item.type==='wer'"><FileTwoTone /></span>
+            <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelTwoTone /></span>
+            <span v-else-if="item.type==='doc' || item.type==='docx'"><FileWordTwoTone/></span>
+            <span v-else-if="item.type==='ppt' || item.type==='pptx'"><FilePptTwoTone /></span>
+            <span v-else-if="item.type==='jpg' || item.type==='jpeg'"><FileJpgOutlined/></span>
+            <span v-else-if="item.type==='png'"><FileImageTwoTone/></span>
+            <span v-else-if="item.type==='gif'"><FileGifOutlined /></span>
+            <span v-else-if="item.type==='txt'"><FileTextTwoTone /></span>
+            <span v-else-if="item.type==='zip'"><FileZipOutlined/></span>
+            <span v-else-if="item.type==='pdf'"><FilePdfTwoTone /></span>
+            <span v-else-if="item.type==='mindmap'"><BulbTwoTone  /></span>
+            <span v-else><FileUnknownTwoTone /></span>
+          </div>
+          <div class="item-meta-info-name">
+            <span class="item-name"> {{ item.name }}</span>
+          </div>
+          <div class="item-meta-info-encrypt">
+            <span v-if="item.encrypted === '1'"><LockTwoTone /></span>
+          </div>
         </div>
         <div>
           <span class="item-info-tip">{{item.createTime}}</span>
@@ -45,10 +52,12 @@
           <span class="item-info-tip" v-else-if="item.size > 1024">&nbsp;&nbsp;&nbsp;{{(item.size / 1024).toFixed(2)}}KB</span>
           <span class="item-info-tip" v-else>&nbsp;&nbsp;&nbsp;{{item.size}}B</span>
         </div>
-
       </div>
     </div>
+
+    <!-- 文件上传-->
     <input type="file" id="file-upload" style="display: none; position: absolute;">
+    <!-- 搜索框-->
     <div id="search-modal" class="search-modal">
       <input type="text" v-model="keyword" id="search-input" @input="searchEvent"  placeholder="Search...">
       <ul id="suggestions-list">
@@ -68,6 +77,7 @@
       <span>一共：{{ totalFileSize }}个项目</span>
     </div>
   </div>
+  <!-- 对话框-->
   <a-modal v-model:open="progressOpen" title="上传进度">
     <a-progress :percent="progressPercent" />
   </a-modal>
@@ -76,7 +86,7 @@
 <script setup>
 import {FilePdfTwoTone,FileMarkdownTwoTone,FileImageTwoTone,FolderTwoTone,FileWordTwoTone,
   FilePptTwoTone,FileTextTwoTone,FileExcelTwoTone,FileTwoTone,FileUnknownTwoTone,
-  FileMarkdownOutlined, FolderOutlined, FileZipOutlined,
+  FileMarkdownOutlined, FolderOutlined, FileZipOutlined,LockTwoTone,
   FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
   FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
   PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined,FileTextOutlined,FileGifOutlined,
@@ -340,8 +350,7 @@ const doubleClick = (info) => {
     return;
   }
 
-  const dClickId = info.id
-  dirSelectKey = dClickId
+  dirSelectKey = info.id
   updateFileList({"nid": dirSelectKey})
 
   //更新面包线
@@ -726,6 +735,30 @@ const fileItemMenus = shallowRef({
 
         return true;
       }
+    },
+    {
+      label: "阅读密码",
+      tip: 'encrypted',
+      click: (menu, arg) => {
+        const id = arg.id;
+        noteApi.encryptedReadNote({id: id}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            autoUpdateFileList()
+
+            //通知更新面板
+            arg.encrypted = '1'
+            emitT('choose-note', arg)
+          } else {
+            message.error("网络请求加密笔记失败")
+          }
+        }).catch(err => {
+          message.error("网络请求加密笔记错误")
+          console.error(err)
+        })
+
+        return true;
+      }
     }
   ]
 })
@@ -1054,7 +1087,7 @@ onMounted(() => {
           message.success("上传成功")
           autoUpdateFileList()
         } else {
-          message.error("drop文件上传失败")
+          message.error("文件上传失败")
         }
         progressOpen.value = false
         progressPercent.value = 0
@@ -1062,25 +1095,6 @@ onMounted(() => {
 
       // 发送文件
       xhr.send(formData);
-
-
-
-      // fetch(reqUrl, { // 替换成你的上传接口
-      //   method: 'POST',
-      //   body: formData,
-      //   headers: {Authorization: localStorage.getItem("token")}
-      // })
-      //     .then(response => response.json())
-      //     .then(data => {
-      //       message.success("上传文件成功")
-      //       // console.log('File uploaded successfully:', data);
-      //       //更新文件列表
-      //       updateFileList({nid: dirSelectKey})
-      //     })
-      //     .catch(error => {
-      //       message.error("上传文件失败")
-      //       console.error('Error uploading file:', error);
-      //     });
     }
   });
 
@@ -1146,18 +1160,6 @@ onMounted(() => {
 
       // 发送文件
       xhr.send(formData);
-
-
-      // noteApi.uploadNote({file: files[0], parentId: dirSelectKey}).then(res => {
-      //   const resData = res.data
-      //   if (resData.respCode === 0) {
-      //     autoUpdateFileList()
-      //     message.success("上传成功")
-      //   }
-      // }).catch(err => {
-      //   console.error(err)
-      //   message.error("drop文件上传失败")
-      // })
     }
   });
 
@@ -1224,6 +1226,25 @@ onMounted(() => {
 
 .active {
   background-color: antiquewhite;
+}
+
+.item-meta-info {
+  display: flex;
+  align-items: center;
+}
+
+.item-meta-info-type {
+  align-self: start;
+  margin-right: 5px;
+}
+.item-meta-info-name {
+  flex: 1;
+  height: 25px;
+  overflow: hidden;
+}
+.item-meta-info-encrypt {
+  margin-left: 5px;
+  align-self: end;
 }
 
 .item-name {
