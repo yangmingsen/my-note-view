@@ -11,9 +11,11 @@ import ExcelViewer from './components/ExcelViewer.vue'
 // import TinyMCEPanel from './components/TinyMCEPanel.vue'
 import MarkdownPreview from './components/MarkdownPreview.vue'
 import MindMapPanel from './components/MindMapPanel.vue'
+import NeedPassword from './components/NeedPassword.vue'
 import {RemoteApi as noteApi} from "./api/RemoteApi"
 import {ConstansFlag as constFlag} from './js/ConstansFlag.js'
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
+import {message} from "ant-design-vue";
 
 const mdNoteId = ref('')
 const werNoteId = ref ('')
@@ -24,11 +26,14 @@ const excelNoteId = ref('')
 const textNoteId = ref('')
 const mindMapNoteId = ref('')
 
+//needPasswordId 零时
+const needPasswordId = ref('')
+
 const fileType = constFlag.fileType
 
 const editorFlag = {
   markdwon: 0, wangEditor: 1,  blank: 2, notSupport: 3, img: 4,
-  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10
+  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10, needPassword: 11
 }
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
@@ -44,14 +49,24 @@ const chooseEditor = (info) => {
     return
   }
 
-  //更新选中的父目录
+  //更新选中的父目录, 它会去更新menu组件的tree树
   if (treeSelectKeys.value !== info.parentId) {
     treeSelectKeys.value = info.parentId
   }
 
+
   const noteId = info.id
   noteTitleName.value = info.name //更新标题
   showNoteTitleName.value = true
+
+  //加密拦截点
+  if (info.encrypted === '1') {
+    editorSelected.value = editorFlag.needPassword
+    needPasswordId.value = noteId
+    return
+  }
+
+
   if (info.isile === '0') {
     editorSelected.value = editorFlag.blank
     showNoteTitleName.value = false
@@ -103,9 +118,9 @@ const showNoteTitleName = ref(false)
 
 //布局模式
 const layoutModel = {defualt: 'container', simple: 'container2', edit: 'container3'}
+const containerSty = ref(layoutModel.defualt)
 const menuSty = ref('menu')
 const fileListSty = ref('file')
-const containerSty = ref(layoutModel.defualt)
 //改变布局模式
 const changeLayoutSty = (para) => {
   if (para.layout === layoutModel.defualt) {
@@ -125,6 +140,8 @@ const changeLayoutSty = (para) => {
 
   const tooltip = document.getElementById('layout-tooltip-id');
   tooltip.style.display = 'none'; // 选择后隐藏弹框
+
+  syncMainLayout()
 }
 //点击开启对话框
 const clickShowTips = () => {
@@ -142,6 +159,44 @@ const clickShowTips = () => {
     tooltip.style.display = 'none';
   }
 }
+
+//同步布局
+const syncMainLayout = () => {
+  const layout = {
+    layout: {containerSty: containerSty.value, menuSty: menuSty.value, fileListSty: fileListSty.value}
+  }
+  noteApi.updateUserConfig({content: JSON.stringify(layout)}).then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      message.success("同步layout成功")
+    }
+  }).catch(err => {
+    message.error("同步layout失败")
+    console.error(err)
+  })
+
+}
+
+onMounted(() => {
+  noteApi.findUserConfig().then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      const userConfigObj = JSON.parse(resData.datas)
+
+      //set layout
+      const layout = userConfigObj.layout
+      if (layout !== undefined) {
+        containerSty.value = layout.containerSty
+        menuSty.value = layout.menuSty
+        fileListSty.value = layout.fileListSty
+      }
+    }
+  }).catch(err => {
+    message.error("获取config数据失败")
+    console.error(err)
+  })
+})
+
 </script>
 
 <template>
@@ -189,6 +244,10 @@ const clickShowTips = () => {
             <MindMapPanel
                 :noteid="mindMapNoteId"
                 v-if="editorSelected === editorFlag.mindmap"></MindMapPanel>
+            <NeedPassword
+                @choose-note="(info) => {chooseEditor(info)}"
+                :noteid="needPasswordId"
+                v-if="editorSelected === editorFlag.needPassword"></NeedPassword>
             <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
           </div>
           <div class="content-scope-fun">
@@ -283,6 +342,7 @@ const clickShowTips = () => {
 
 .content-title {
   min-height: 5vh;
+  padding-left: 2%;
 }
 
 .content-scope {
