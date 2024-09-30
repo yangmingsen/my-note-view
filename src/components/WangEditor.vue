@@ -24,6 +24,7 @@ import { message  } from 'ant-design-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi";
 import {hex_md5} from '../js/encryptionAlgorithm.js'
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
+import {useNotifySaveStore} from "../store/useNotifySaveStore";
 
 const props = defineProps(['noteid'])
 
@@ -40,6 +41,16 @@ onMounted(() => {
   }, 60*1000)
 })
 
+
+const notifySave = () => {
+  saveContent({id: props.noteid, content: getCurContent(), op: 1})
+}
+
+//监听保存
+const notifySaveStore = useNotifySaveStore();
+notifySaveStore.$subscribe((mutation, state) => {
+  notifySave()
+})
 
 const toolbarConfig = {}
 const editorConfig = {placeholder: '请输入内容...',  MENU_CONF: {}}
@@ -150,13 +161,13 @@ const getTextContent = () => {
 
 watch(() => props.noteid,  (noteidNew, noteidOld) => {
   noteApi.noteContentGet({id: noteidNew}).then(res => {
-    if (noteidOld != undefined) {
+    if (noteidOld !== undefined) {
       const id = noteidOld
       const oldData = getCurContent()
       const textContent = getTextContent()
       const latestVersion =  hex_md5(oldData)
       //如果没有修改过就不同步
-      if (latestVersion != serverDataVersion) {
+      if (latestVersion !== serverDataVersion) {
         const para = {id: id, content: oldData, textContent: textContent, type: "wer"}
         noteApi.noteContentAddAndUpdate(para).then(res => {
           message.success("同步成功")
@@ -168,7 +179,7 @@ watch(() => props.noteid,  (noteidNew, noteidOld) => {
     }
 
     const resData = res.data.datas
-    if (resData == null || resData.content == undefined || resData.content.trim().length == 0) {
+    if (resData == null || resData.content === undefined || resData.content.trim().length === 0) {
       message.warning("获取内容为空")
       valueHtml.value = ''
     } else {
@@ -193,8 +204,11 @@ const saveContent = (info) => {
   const textContent = getTextContent();
   const latestVersion =  hex_md5(syncData)
   //如果没有修改过就不同步
-  if (latestVersion == serverDataVersion) {
+  if (latestVersion === serverDataVersion) {
     //版本相同不同步
+    if (info.op !== undefined && info.op === 1) {
+      message.warning("版本相同不同步")
+    }
     return
   }
   serverDataVersion = latestVersion

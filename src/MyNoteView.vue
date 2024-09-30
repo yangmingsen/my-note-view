@@ -14,8 +14,12 @@ import MindMapPanel from './components/MindMapPanel.vue'
 import NeedPassword from './components/NeedPassword.vue'
 import {RemoteApi as noteApi} from "./api/RemoteApi"
 import {ConstansFlag as constFlag} from './js/ConstansFlag.js'
-import {ref, onMounted} from 'vue'
+import {ref,  onMounted} from 'vue'
 import {message} from "ant-design-vue";
+import {useNotifySaveStore} from './store/useNotifySaveStore'
+
+const notifySaveStore = useNotifySaveStore();
+
 
 const mdNoteId = ref('')
 const werNoteId = ref ('')
@@ -60,7 +64,7 @@ const chooseEditor = (info) => {
   showNoteTitleName.value = true
 
   //加密拦截点
-  if (info.encrypted === '1') {
+  if (info.encrypted === '1' && info.isile === '1') {
     editorSelected.value = editorFlag.needPassword
     needPasswordId.value = noteId
     return
@@ -116,6 +120,14 @@ const noteTitleName = ref('')
 //控制标题是否显示
 const showNoteTitleName = ref(false)
 
+const layoutImg = {
+  normalImgSrc: '/src/assets/layout-3.png',
+  simpleImgSrc: '/src/assets/layout-simple.png',
+  editorImgSrc: '/src/assets/layout-editor.png'
+}
+
+const curLayoutImg = ref(layoutImg.normalImgSrc)
+
 //布局模式
 const layoutModel = {defualt: 'container', simple: 'container2', edit: 'container3'}
 const containerSty = ref(layoutModel.defualt)
@@ -128,14 +140,17 @@ const changeLayoutSty = (para) => {
     menuSty.value = 'menu'
     fileListSty.value = 'file'
     containerSty.value = layoutModel.defualt
+    curLayoutImg.value = layoutImg.normalImgSrc
   } else if (para.layout === layoutModel.simple) {
     menuSty.value = 'menu2'
     fileListSty.value = 'file2'
     containerSty.value = layoutModel.simple
+    curLayoutImg.value = layoutImg.simpleImgSrc
   } else {
     menuSty.value = 'menu3'
     fileListSty.value = 'file3'
     containerSty.value = layoutModel.edit
+    curLayoutImg.value = layoutImg.editorImgSrc
   }
 
   const tooltip = document.getElementById('layout-tooltip-id');
@@ -163,18 +178,32 @@ const clickShowTips = () => {
 //同步布局
 const syncMainLayout = () => {
   const layout = {
-    layout: {containerSty: containerSty.value, menuSty: menuSty.value, fileListSty: fileListSty.value}
+    layout: {
+      containerSty: containerSty.value,
+      menuSty: menuSty.value,
+      fileListSty: fileListSty.value,
+      layoutImg: curLayoutImg.value
+    }
   }
   noteApi.updateUserConfig({content: JSON.stringify(layout)}).then(res => {
     const resData = res.data
     if (resData.respCode === 0) {
-      message.success("同步layout成功")
+      // message.success("同步layout成功")
+    } else {
+      message.error("同步layout失败")
     }
   }).catch(err => {
-    message.error("同步layout失败")
+    message.error("同步layout错误")
     console.error(err)
   })
 
+}
+
+//通知子编辑组件保存
+const notifySaveEvent = () => {
+  notifySaveStore.$patch((state) => {
+    state.saveEvent++
+  })
 }
 
 onMounted(() => {
@@ -189,12 +218,22 @@ onMounted(() => {
         containerSty.value = layout.containerSty
         menuSty.value = layout.menuSty
         fileListSty.value = layout.fileListSty
+        curLayoutImg.value = layout.layoutImg
       }
     }
   }).catch(err => {
     message.error("获取config数据失败")
     console.error(err)
   })
+
+  document.addEventListener('keydown', function (event) {
+    // 检查是否按下了 Ctrl (或 Cmd) + S
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault(); // 阻止默认的保存行为
+      // message.warn('保存功能已被禁用！'); // 可选：给用户提示
+      notifySaveEvent()
+    }
+  });
 })
 
 </script>
@@ -255,7 +294,7 @@ onMounted(() => {
               <img src="./assets/export-img.png">
             </div>
             <div class="main-layout-change" @click="clickShowTips">
-              <img src="./assets/layout-3.png">
+              <img :src="curLayoutImg">
             </div>
           </div>
         </div>

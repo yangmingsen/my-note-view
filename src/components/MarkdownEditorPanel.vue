@@ -24,9 +24,11 @@ import { message  } from 'ant-design-vue'
 import { EditOutlined, CompressOutlined } from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi"
 import {hex_md5} from '../js/encryptionAlgorithm.js'
+import {useNotifySaveStore} from "../store/useNotifySaveStore";
 
-
+//props变量
 const props = defineProps(['noteid'])
+
 
 
 const editorModeConst = {edit: 'edit', editable: 'editable', preview: 'preview'}
@@ -125,7 +127,7 @@ const saveContent = (info) => {
   const syncData = info.content
   const latestVersion =  hex_md5(syncData)
   //如果没有修改过就不同步
-  if (latestVersion == serverDataVersion) {
+  if (latestVersion === serverDataVersion) {
     // message.warning("md版本相同不同步")
     //版本相同不同步
     if (info.op !== undefined && info.op === 1) {
@@ -148,6 +150,23 @@ const saveContent = (info) => {
 const manualSave = (text, html) => {
   saveContent({id: props.noteid, content: text, op: 1})
 }
+
+//自动保存
+const autoSave = () => {
+  saveContent({id: props.noteid, content: dataText.value})
+}
+
+const notifySave = () => {
+  saveContent({id: props.noteid, content: text, op: 1})
+}
+
+//监听保存
+const notifySaveStore = useNotifySaveStore();
+notifySaveStore.$subscribe((mutation, state) => {
+  notifySave()
+})
+
+
 
 
 </script>

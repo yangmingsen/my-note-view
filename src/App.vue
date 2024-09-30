@@ -3,6 +3,7 @@ import axios from "axios";
 import { useRoute, useRouter } from 'vue-router'
 import {message} from 'ant-design-vue';
 import {onMounted} from 'vue'
+import {ConstansFlag as constansFlag} from "./js/ConstansFlag";
 
 const router = useRouter()
 
@@ -39,7 +40,12 @@ axios.interceptors.response.use(res => {
       let status = error.response.status;
       if (status === 401) {
         message.error("登录异常.....")
+
+        const username = localStorage.getItem(constansFlag.username)
         localStorage.clear();
+        if (username !== undefined) {
+          localStorage.setItem(constansFlag.username, username)
+        }
 
         router.push('/login')
       }
