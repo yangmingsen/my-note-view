@@ -27,6 +27,7 @@ import {RemoteApi as noteApi} from './api/RemoteApi'
 import { useRoute, useRouter } from 'vue-router'
 import {ref, onMounted} from 'vue'
 import {message} from 'ant-design-vue';
+import {ConstansFlag as constansFlag} from "./js/ConstansFlag";
 
 
 const router = useRouter()
@@ -44,10 +45,10 @@ const doLogin = () => {
     if (resData.respCode === 0) {
       message.success("登录成功...")
 
-      localStorage.setItem("token", resData.datas.token)
-      localStorage.setItem("username", resData.datas.username)
-      localStorage.setItem("avtarUrl", resData.datas.avtarUrl)
-      localStorage.setItem("userId", resData.datas.userId)
+      localStorage.setItem(constansFlag.token, resData.datas.token)
+      localStorage.setItem(constansFlag.username, resData.datas.username)
+      // localStorage.setItem("avtarUrl", resData.datas.avtarUrl)
+      localStorage.setItem(constansFlag.userId, resData.datas.userId)
 
       router.push('/')
     } else {
@@ -59,7 +60,16 @@ const doLogin = () => {
   })
 }
 
+const initLoad = () => {
+  const cacheUsername = localStorage.getItem(constansFlag.username)
+  if (cacheUsername !== undefined) {
+    username.value = cacheUsername
+  }
+}
 
+onMounted(() => {
+  initLoad()
+})
 
 </script>
 
