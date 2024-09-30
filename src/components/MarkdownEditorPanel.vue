@@ -157,7 +157,7 @@ const autoSave = () => {
 }
 
 const notifySave = () => {
-  saveContent({id: props.noteid, content: text, op: 1})
+  saveContent({id: props.noteid, content: dataText.value, op: 1})
 }
 
 //监听保存

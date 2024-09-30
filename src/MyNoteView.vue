@@ -121,12 +121,12 @@ const noteTitleName = ref('')
 const showNoteTitleName = ref(false)
 
 const layoutImg = {
-  normalImgSrc: '/src/assets/layout-3.png',
-  simpleImgSrc: '/src/assets/layout-simple.png',
-  editorImgSrc: '/src/assets/layout-editor.png'
+  normalImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd9163afa115496891bc0d',
+  simpleImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd916bafa115496891bc11',
+  editorImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd9165afa115496891bc0f'
 }
 
-const curLayoutImg = ref(layoutImg.normalImgSrc)
+const curLayoutImg = ref('')
 
 //布局模式
 const layoutModel = {defualt: 'container', simple: 'container2', edit: 'container3'}
