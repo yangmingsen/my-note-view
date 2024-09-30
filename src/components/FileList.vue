@@ -350,11 +350,22 @@ const doubleClick = (info) => {
     return;
   }
 
-  dirSelectKey = info.id
-  updateFileList({"nid": dirSelectKey})
+  if (info.encrypted === '1') {
+    const arg = {
+      title: '请输入访问密码',
+      content: '',
+      key: info.id,
+      opType: opType.encrypted,
+      inputType: 'password'
+    }
+    showInputModalConfirm(arg)
+  } else {
+    dirSelectKey = info.id
+    updateFileList({"nid": dirSelectKey})
+    //更新面包线
+    updateBreadcrumb({id: dirSelectKey})
+  }
 
-  //更新面包线
-  updateBreadcrumb({id: dirSelectKey})
 }
 
 //更新文件列表
@@ -468,16 +479,17 @@ function filterClick(event) {
 
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
-  let iptV = info.content || ' '
+  let iptV = info.content || ''
   const idKey = info.key || '' //当前节点id
   const parentId = info.parentId || '' //父节点id
+  const inputType = info.inputType || 'text'
   Modal.confirm({
     title: info.title,
     icon: createVNode(PlusCircleOutlined),
     keyboard: true,
     closable: true,
     content: createVNode('input',
-        {type: 'text', value: iptV, id: 'd-input02', style: {width: '100%'}}),
+        {type: inputType, value: iptV, id: 'd-input02', style: {width: '100%'}}),
     onOk() {
       const iptE = document.querySelector("#d-input02");
       iptV = iptE.value; //输入值
@@ -591,6 +603,23 @@ const showInputModalConfirm = (info) => {
           message.error("url2pdf转换失败")
           console.error(err)
         })
+      } else if (info.opType === opType.encrypted) {
+        noteApi.notePasswordAuth({id: idKey, password: iptV}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            message.success("密码正确")
+
+            dirSelectKey = idKey
+            updateFileList({"nid": dirSelectKey})
+            //更新面包线
+            updateBreadcrumb({id: dirSelectKey})
+          } else {
+            message.error("密码不正确")
+          }
+        }).catch(err => {
+          message.error("网络请求数据失败")
+          console.log(err)
+        })
       }
 
     },
@@ -610,7 +639,7 @@ const notifyParentDirUpdate = () => {
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
-  destroy: 4,  allDestroy: 5, url2pdf: 6}
+  destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7}
 //右击某个文件item的菜单
 const fileItemMenus = shallowRef({
   menus: [

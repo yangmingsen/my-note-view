@@ -1,6 +1,4 @@
 <template>
-  <button @click="clickShow">ClickMe</button>
-  <button @click="saveData">保存</button>
   <div class="mind-map">
     <mindmap
         v-if="reLoadF"
@@ -28,6 +26,7 @@ import 'vue3-mindmap/dist/style.css'
 import {ref, watch} from 'vue'
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {message} from "ant-design-vue";
+import {useNotifySaveStore} from "../store/useNotifySaveStore";
 
 
 const props = defineProps(['noteid'])
@@ -55,7 +54,6 @@ const clickShow = () => {
   console.log(data.value)
 }
 
-
 const saveData = () => {
   const subData = {id: props.noteid, content: data.value}
   noteApi.mindMapSave({id: props.noteid, content: JSON.stringify(subData)}).then(res => {
@@ -68,6 +66,11 @@ const saveData = () => {
     console.error(err)
   })
 }
+
+const notifySaveStore = useNotifySaveStore();
+notifySaveStore.$subscribe((mutation, state) => {
+  saveData()
+})
 
 </script>
 

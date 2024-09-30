@@ -5,7 +5,7 @@
         <span v-if="showErrorTips"> 密码错误，请重新输入</span>
       </div>
       <div class="pd-container">
-        <input type="password" v-model="authPass" class="pd-input" placeholder="请输入阅读密码">
+        <input type="password" v-model="authPass" @keyup.enter="doPassAuth" class="pd-input" placeholder="请输入阅读密码">
         <button class="pd-button" @click="doPassAuth">确定</button>
       </div>
       <div><a href="#">取消阅读密码</a></div>
@@ -28,6 +28,10 @@ const authPass = ref('')
 
 
 const doPassAuth = () => {
+  if  (authPass.value === '') {
+    message.warn("请输入密码")
+    return
+  }
   noteApi.notePasswordAuth({id: props.noteid, password: authPass.value}).then(res => {
     const resData = res.data
     if (resData.respCode === 0) {
@@ -35,7 +39,13 @@ const doPassAuth = () => {
       noteIndex.encrypted = '0'
       emitT('choose-note', noteIndex)
     } else {
-      showErrorTips.value = true
+      if (showErrorTips.value === false) {
+        showErrorTips.value = true
+        setTimeout(() => {
+          showErrorTips.value = false
+        }, 1000)
+      }
+
     }
   }).catch(err => {
     message.error("认证失败")
