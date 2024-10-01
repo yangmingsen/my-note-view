@@ -299,7 +299,22 @@ const spaceClick = (event) => {
   event.stopPropagation();
 }
 
-const needReadPassword =  {
+const doReleaseReadPassword2 = () => {
+  doReleaseReadPassword({id: tmpNoteIndexId})
+}
+
+const doReleaseReadPassword = (info) => {
+  const arg = {
+    title: '请输入取消密码',
+    content: '',
+    key: info.id,
+    opType: opType.unEncrypted,
+    inputType: 'password'
+  }
+  showInputModalConfirm(arg)
+}
+
+const needReadPasswordMenu =  {
   label: "阅读密码",
   tip: 'encrypted',
   click: (menu, arg) => {
@@ -323,22 +338,7 @@ const needReadPassword =  {
     return true;
   }
 }
-
-const doReleaseReadPassword2 = () => {
-  doReleaseReadPassword({id: tmpNoteIndexId})
-}
-const doReleaseReadPassword = (info) => {
-  const arg = {
-    title: '请输入取消密码',
-    content: '',
-    key: info.id,
-    opType: opType.unEncrypted,
-    inputType: 'password'
-  }
-  showInputModalConfirm(arg)
-}
-
-const releaseReadPassword = {
+const releaseReadPasswordMenu = {
   label: "取消阅读密码",
   tip: 'UnEncrypted',
   click: (menu, arg) => {
@@ -356,9 +356,9 @@ const itemRightClick = (event, item) => {
       itemMenus.menus.push(item)
     }
     if (item.encrypted === '0') {
-      itemMenus.menus.push(needReadPassword)
+      itemMenus.menus.push(needReadPasswordMenu)
     } else {
-      itemMenus.menus.push(releaseReadPassword)
+      itemMenus.menus.push(releaseReadPasswordMenu)
     }
 
     menusEvent(event, itemMenus, item)
@@ -410,7 +410,7 @@ const setFileListData = (info) => {
   totalFileSize.value = fileListData.value.length
 }
 
-//
+//笔记目录进入，需要输入密码进入的相关
 const showErrorTips = ref(false)
 const authPass = ref('')
 let tmpNoteIndexId = ''
@@ -448,7 +448,6 @@ notifyUpdateFileListStore.$subscribe((mutation, state) => {
     autoUpdateFileList()
   }
 })
-
 
 let addNoteUpdate = 0; //see useSelectStore.js
 //订阅监听tree的key变更. 当鼠标点击menu tree组件上的某个节点时更新这里
@@ -922,6 +921,71 @@ const notifyParentDirUpdate = () => {
   })
 }
 
+//右击菜单项
+const createMarkdownMenu =  {
+  label: "新笔记(Markdown)",
+  tip: 'NewMarkdownNote',
+  click: () => {
+    const arg = {
+      title: '新文件(Markdown)',
+      content: '请输入文件名',
+      isile: '1',
+      type: 'md',
+      opType: opType.createNewFile,
+      parentId: getDirSelectKey() //当前目录id
+    }
+    showInputModalConfirm(arg)
+    return true;
+  }
+}
+const createWerMenu = {
+  label: "新文件(Wer)",
+  tip: 'NewWerNote',
+  click: () => {
+    const arg = {
+      title: '新文件(Wer)',
+      content: '请输入文件名',
+      isile: '1',
+      type: 'wer',
+      opType: opType.createNewFile,
+      parentId: getDirSelectKey() //当前目录id
+    }
+    showInputModalConfirm(arg)
+    return true;
+  }
+}
+const createMindMapMenu = {
+  label: "新文件(MindMap)",
+  tip: 'NewMindMapNote',
+  click: () => {
+    const arg = {
+      title: '新文件(MindMap)',
+      content: '请输入文件名',
+      isile: '1',
+      type: 'mindmap',
+      opType: opType.createNewFile,
+      parentId: getDirSelectKey() //当前目录id
+    }
+    showInputModalConfirm(arg)
+    return true;
+  }
+}
+const createDirMenu = {
+  label: "新目录",
+  tip: 'NewDir',
+  click: () => {
+    const arg = {
+      title: '新目录',
+      content: '请输入目录名',
+      isile: '0',
+      opType: opType.createDir,
+      parentId: getDirSelectKey() //当前目录id
+    }
+    showInputModalConfirm(arg)
+    return true;
+  }
+}
+
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
   destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8}
@@ -929,32 +993,15 @@ const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
 const fileItemMenus = shallowRef({
   menus: [
     {
-      label: "新文件(markdown)",
-      tip: 'NewFile',
-      click: (menu, arg) => {
-        arg.title = menu.label
-        arg.content = '请输入新文件名称'
-        arg.isile = '1' //文件
-        arg.type = 'md' //暂时默认wer文件
-        arg.opType = opType.createNewFile //
-        arg.key = arg.parentId //必须是当前选中的节点父节点id
-        showInputModalConfirm(arg)
-        return true;
-      }
-    }, //0
-    {
-      label: "新目录",
-      tip: 'NewDir',
-      click: (menu, arg) => {
-        arg.title = menu.label
-        arg.content = '请输入新目录名称'
-        arg.isile = '0' //目录
-        arg.opType = opType.createDir
-        arg.key = arg.parentId //必须是当前选中的节点父节点id
-        showInputModalConfirm(arg)
-        return true;
-      }
+      label: "新建笔记",
+      tip: 'NewNote',
+      children: [
+        createMarkdownMenu,
+        createWerMenu,
+        createMindMapMenu
+      ]
     },//1
+    createDirMenu,
     {
       label: "重命名",
       tip: 'rename',
@@ -1055,69 +1102,10 @@ const fileItemMenus = shallowRef({
 //空白区域右击菜单列表
 const spaceMenus = shallowRef({
   menus: [
-    {
-      label: "新文件(Wer)",
-      tip: 'NewFile',
-      click: () => {
-        const arg = {
-          title: '新文件(Wer)',
-          content: '请输入文件名',
-          isile: '1',
-          type: 'wer',
-          opType: opType.createNewFile,
-          parentId: getDirSelectKey() //当前目录id
-        }
-        showInputModalConfirm(arg)
-        return true;
-      }
-    },
-    {
-      label: "新文件(Markdown)",
-      tip: 'NewFile',
-      click: () => {
-        const arg = {
-          title: '新文件(Markdown)',
-          content: '请输入文件名',
-          isile: '1',
-          type: 'md',
-          opType: opType.createNewFile,
-          parentId: getDirSelectKey() //当前目录id
-        }
-        showInputModalConfirm(arg)
-        return true;
-      }
-    },
-    {
-      label: "新文件(MindMap)",
-      tip: 'NewFile',
-      click: () => {
-        const arg = {
-          title: '新文件(MindMap)',
-          content: '请输入文件名',
-          isile: '1',
-          type: 'mindmap',
-          opType: opType.createNewFile,
-          parentId: getDirSelectKey() //当前目录id
-        }
-        showInputModalConfirm(arg)
-        return true;
-      }
-    },
-    {
-      label: "新目录",
-      tip: 'NewDir',
-      click: () => {
-        const arg = {
-          title: '新目录',
-          content: '请输入目录名',
-          isile: '0',
-          opType: opType.createNewFile,
-          parentId: getDirSelectKey() //当前目录id
-        }
-        showInputModalConfirm(arg)
-        return true;
-      }
-    },
+    createMarkdownMenu,
+    createWerMenu,
+    createMindMapMenu,
+    createDirMenu,
     {
       label: "上传",
       tip: 'Upload',

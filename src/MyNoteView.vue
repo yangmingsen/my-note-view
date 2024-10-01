@@ -17,9 +17,11 @@ import {ConstansFlag as constFlag} from './js/ConstansFlag.js'
 import {ref,  onMounted} from 'vue'
 import {message} from "ant-design-vue";
 import {useNotifySaveStore} from './store/useNotifySaveStore'
+import {userGlobalNotifyStore} from "./store/userGlobalNotifyStore";
 
-const notifySaveStore = useNotifySaveStore();
+const notifySaveStore = useNotifySaveStore()
 
+const globalNotifyStore = userGlobalNotifyStore()
 
 const mdNoteId = ref('')
 const werNoteId = ref ('')
@@ -120,14 +122,6 @@ const noteTitleName = ref('')
 //控制标题是否显示
 const showNoteTitleName = ref(false)
 
-const layoutImg = {
-  normalImgSrc: constFlag.apiUrl+'/file/view?id=66fb5dad56e8fc4eb5d37a23',
-  simpleImgSrc: constFlag.apiUrl+'/file/view?id=66fb5da556e8fc4eb5d37a1f',
-  editorImgSrc: constFlag.apiUrl+'/file/view?id=66fb5da956e8fc4eb5d37a21'
-}
-
-const curLayoutImg = ref('')
-
 //布局模式
 const layoutModel = {defualt: 'container', simple: 'container2', edit: 'container3'}
 const containerSty = ref(layoutModel.defualt)
@@ -140,17 +134,17 @@ const changeLayoutSty = (para) => {
     menuSty.value = 'menu'
     fileListSty.value = 'file'
     containerSty.value = layoutModel.defualt
-    curLayoutImg.value = layoutImg.normalImgSrc
+    layoutImgFlag.value = 3
   } else if (para.layout === layoutModel.simple) {
     menuSty.value = 'menu2'
     fileListSty.value = 'file2'
     containerSty.value = layoutModel.simple
-    curLayoutImg.value = layoutImg.simpleImgSrc
+    layoutImgFlag.value = 2
   } else {
     menuSty.value = 'menu3'
     fileListSty.value = 'file3'
     containerSty.value = layoutModel.edit
-    curLayoutImg.value = layoutImg.editorImgSrc
+    layoutImgFlag.value = 1
   }
 
   const tooltip = document.getElementById('layout-tooltip-id');
@@ -182,7 +176,7 @@ const syncMainLayout = () => {
       containerSty: containerSty.value,
       menuSty: menuSty.value,
       fileListSty: fileListSty.value,
-      layoutImg: curLayoutImg.value
+      layoutImgFlag: layoutImgFlag.value
     }
   }
   noteApi.updateUserConfig({content: JSON.stringify(layout)}).then(res => {
@@ -206,26 +200,35 @@ const notifySaveEvent = () => {
   })
 }
 
-onMounted(() => {
+const initCustConfig =  () => {
   noteApi.findUserConfig().then(res => {
     const resData = res.data
     if (resData.respCode === 0) {
       const userConfigObj = JSON.parse(resData.datas)
-
       //set layout
       const layout = userConfigObj.layout
       if (layout !== undefined) {
         containerSty.value = layout.containerSty
         menuSty.value = layout.menuSty
         fileListSty.value = layout.fileListSty
-        curLayoutImg.value = layout.layoutImg
+        layoutImgFlag.value = layout.layoutImgFlag
       }
+      //set bgImg
+      const bgImgInfo = userConfigObj.bgImgInfo
+      if (bgImgInfo !== undefined) {
+        bgImg.value = bgImgInfo.bgImg
+      }
+    } else {
+      message.error("获取userConfig数据失败")
     }
   }).catch(err => {
-    message.error("获取config数据失败")
+    message.error("获取userConfig数据错误")
     console.error(err)
   })
+}
 
+onMounted(() => {
+  initCustConfig()
   document.addEventListener('keydown', function (event) {
     // 检查是否按下了 Ctrl (或 Cmd) + S
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
@@ -236,10 +239,23 @@ onMounted(() => {
   });
 })
 
+//监听重新加载用户配置
+const bgImg = ref('')
+let tmpUpdateBgImgCnt = 0
+globalNotifyStore.$subscribe((mutation, state) => {
+  if (state.updateBgImgCnt !== undefined && state.updateBgImgCnt !== tmpUpdateBgImgCnt) {
+    tmpUpdateBgImgCnt = state.updateBgImgCnt
+    //重新加载配置
+    initCustConfig()
+  }
+})
+
+// 1 => editor(1栏模式), 2 => simple模式(2栏模式),  3 => 3栏模式
+const layoutImgFlag = ref(3)
 </script>
 
 <template>
-  <div class="main-component">
+  <div class="main-component" :style="{'background-image': 'url('+bgImg+')'}">
     <div :class="containerSty">
       <div :class="menuSty">
         <MenuList :up-select-key="treeSelectKeys"></MenuList>
@@ -290,11 +306,13 @@ onMounted(() => {
             <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
           </div>
           <div class="content-scope-fun">
-            <div class="content-fun">
-              <img src="./assets/export-img.png">
-            </div>
+<!--            <div class="content-fun">-->
+<!--              <img src="./assets/export-img.png">-->
+<!--            </div>-->
             <div class="main-layout-change" @click="clickShowTips">
-              <img :src="curLayoutImg">
+              <img v-if="layoutImgFlag === 1" src="./assets/layout-editor.png">
+              <img v-if="layoutImgFlag === 2" src="./assets/layout-simple.png">
+              <img v-if="layoutImgFlag === 3" src="./assets/layout-3.png">
             </div>
           </div>
         </div>
@@ -303,8 +321,8 @@ onMounted(() => {
   </div>
 
   <div id="layout-tooltip-id"  class="layout-tooltip">
-    <img src="./assets/layout-simple.png" @click="changeLayoutSty({layout: layoutModel.simple})">
     <img src="./assets/layout-editor.png" @click="changeLayoutSty({layout: layoutModel.edit})">
+    <img src="./assets/layout-simple.png" @click="changeLayoutSty({layout: layoutModel.simple})">
     <img src="./assets/layout-3.png" @click="changeLayoutSty({layout: layoutModel.defualt})">
   </div>
 
@@ -313,7 +331,7 @@ onMounted(() => {
 <style scoped>
 
 .main-component {
-  background-image: url('http://api.note.yms.top/note/file/view?id=66d9c9fe1d085541cc962801');
+  /*background-image: url('http://api.note.yms.top/note/file/view?id=66d9c9fe1d085541cc962801');*/
   background-size: cover; /* 使图片覆盖整个区域 */
 }
 
@@ -359,7 +377,6 @@ onMounted(() => {
 .menu2, .menu3 {
   display: none;
 }
-
 
 
 .file, .file2 {

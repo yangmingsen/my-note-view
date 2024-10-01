@@ -181,6 +181,15 @@ export const RemoteApi = {
     },
 
     /**
+     * 上传零时文件
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async uploadTmpFile(params) {
+        return await request.post(rurl+"/file/uploadTmpFile", params);
+    },
+
+    /**
      * url转pdf
      * @param params {url: xxx, parentId: xxx}
      * @returns {Promise<AxiosResponse<any>>}

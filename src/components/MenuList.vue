@@ -1,21 +1,21 @@
 <template>
   <div class="menu-list">
     <div class="avtar">
-      <img src="../assets/avtar.png">
+      <img src="../assets/avtar.png" @click="showUserConfigModal">
     </div>
-<!--    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>-->
-    <div class="new-content">+  新文档</div>
+    <!--    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>-->
+    <div class="new-content">+ 新文档</div>
     <div class="item-li"
          @click="clickManualItem({id: itemList.rencentFiles})"
          :class="itemSelected === itemList.rencentFiles ? 'item-active' : ''"
     >
-      <span><HistoryOutlined /> &nbsp;&nbsp;最新文档</span>
+      <span><HistoryOutlined/> &nbsp;&nbsp;最新文档</span>
     </div>
     <div class="item-li"
          @click="clickManualItem({id: itemList.delFiles})"
          :class="itemSelected === itemList.delFiles ? 'item-active' : ''"
     >
-      <span><DeleteTwoTone /> &nbsp;&nbsp;最近删除</span>
+      <span><DeleteTwoTone/> &nbsp;&nbsp;最近删除</span>
     </div>
     <div class="dir-list">
       <a-tree
@@ -31,24 +31,36 @@
     </div>
   </div>
 
+
+  <a-modal v-model:open="showUserConfigFlag"  width="800px"  title="用户配置" @cancel="closeUserConfigModal">
+    <template #footer>
+    </template>
+    <UserConfigPanel></UserConfigPanel>
+  </a-modal>
+
 </template>
 
 <script setup>
 import {ref, shallowRef, createVNode, watch} from 'vue';
-import { menusEvent } from 'vue3-menus';
-import { message, Modal  } from 'ant-design-vue';
-import { PlusCircleOutlined, DeleteOutlined,HistoryOutlined,
-  DeleteTwoTone} from '@ant-design/icons-vue';
+import {menusEvent} from 'vue3-menus';
+import {message, Modal} from 'ant-design-vue';
+import {
+  PlusCircleOutlined, DeleteOutlined, HistoryOutlined,
+  DeleteTwoTone
+} from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
 import {useItemSelectStore} from "../store/useItemSelectStore";
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
-
+import UserConfigPanel from './UserConfigPanel.vue'
 
 const props = defineProps(['upSelectKey'])
 
+//观察selectKey动态变化
 watch(() => props.upSelectKey, (pidN, pidO) => {
-  if (pidN === undefined || pidN === '') {return}
+  if (pidN === undefined || pidN === '') {
+    return
+  }
   noteApi.findBreadcrumb({id: pidN}).then(res => {
     const data = res.data.datas
     treeExpandKeys.value = []
@@ -64,6 +76,17 @@ watch(() => props.upSelectKey, (pidN, pidO) => {
     console.error(err)
   })
 })
+
+
+const showUserConfigFlag = ref(false)
+const showUserConfigModal = () => {
+  showUserConfigFlag.value = true
+  // document.querySelector('.ant-modal-footer').style.display = 'none';
+}
+const closeUserConfigModal = () => {
+  showUserConfigFlag.value = false
+}
+
 
 //当前展开树节点
 const treeExpandKeys = ref([])
@@ -182,7 +205,7 @@ const reloadDirAndFileList = (info) => {
   loadData();
 
   //通知文件列表组件更新最新数据
-  if (nid != curSelectKey ) {
+  if (nid != curSelectKey) {
     //更新当前选中的目录Key
     //这种情况是如果用户在没有选中父目录的情况，直接右击某个目录进行新建
     selectStore.$patch((state) => {
@@ -217,7 +240,7 @@ const clickKey = (key) => {
 
 //监听子目录变化，及时更新tree
 let parentDirUpdate = 0;
-selectStore.$subscribe((mutation, state) =>{
+selectStore.$subscribe((mutation, state) => {
   if (state.parentDirUpdate !== undefined && parentDirUpdate !== state.parentDirUpdate) {
     parentDirUpdate = state.parentDirUpdate
     loadData()
@@ -242,7 +265,7 @@ const loadData = () => {
   noteApi.getAntNoteTree().then((res) => {
     let tmpNotes = res.data.datas;
     treeData.value = []
-    for (let i=0; i<tmpNotes.length; i++) {
+    for (let i = 0; i < tmpNotes.length; i++) {
       treeData.value.push(tmpNotes[i]);
     }
 
@@ -275,7 +298,7 @@ const menus = shallowRef({
             arg.name = menu.label
             arg.title = '请输入新文件名称'
             arg.isile = '1' //文件
-            arg.type  = 'wer' //暂时默认wer文件
+            arg.type = 'wer' //暂时默认wer文件
             arg.opType = opType.createNewFile //
             showInputModalConfirm(arg)
             return true;
@@ -317,7 +340,6 @@ const menus = shallowRef({
   ]
 });
 
-
 </script>
 
 <style scoped>
@@ -332,11 +354,13 @@ const menus = shallowRef({
   margin-left: 35%;
   margin-top: 10px;
 }
+
 .avtar img {
   max-width: 100%;
   border: 3px solid white;
   border-radius: 50%;
 }
+
 .flush-tag {
   text-align: center;
   font-size: 1.5rem;
@@ -345,24 +369,30 @@ const menus = shallowRef({
 .flush-tag a {
   text-decoration: none;
 }
+
 .flush-tag a:visited {
   color: black;
 }
+
 .flush-tag a:focus {
   color: blueviolet;
 }
+
 .flush-tag a:hover {
   color: aqua;
 }
+
 .flush-tag a:active {
   color: red;
 }
-.flush-tag  a:nth-child(1) {
+
+.flush-tag a:nth-child(1) {
   background: url("../assets/砖石.png") no-repeat 0 0;
   background-size: 30px 30px;
   padding-left: 35px;
 }
-.flush-tag  a:nth-child(2) {
+
+.flush-tag a:nth-child(2) {
   background: url("../assets/flush.png") no-repeat 0 0;
   background-size: 30px 30px;
   padding-left: 35px;
@@ -381,6 +411,7 @@ const menus = shallowRef({
   margin-bottom: 5px;
   border-radius: 30%;
 }
+
 .new-content:hover {
   background-color: #445E97;
 }
