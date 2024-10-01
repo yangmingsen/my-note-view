@@ -1,5 +1,17 @@
 <template>
-  <div class="files-scope">
+
+  <div v-if="showModel === showModelFlag.needPasswordModel">
+    <div class="f-pd-tips">
+      <span v-if="showErrorTips"> 密码错误，请重新输入</span>
+    </div>
+    <div class="f-pd-container">
+      <input type="password" v-model="authPass" @keyup.enter="doPassAuth" class="f-pd-input" placeholder="请输入阅读密码">
+      <button class="f-pd-button" @click="doPassAuth">确定</button>
+    </div>
+    <div><a href="#">取消阅读密码</a></div>
+  </div>
+
+  <div v-if="showModel === showModelFlag.fileListModel" class="files-scope">
     <div class="f-search">
       <img @click="backParentDir" src="../assets/回车按钮.png">
       <div class="search-content">
@@ -103,6 +115,9 @@ import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const emitT = defineEmits(['choose-note'])
 
+const showModelFlag = {fileListModel: 'flm', needPasswordModel: 'npd'}
+const showModel = ref(showModelFlag.fileListModel)
+
 //搜索关键字。 搜索功能实现
 const keyword = ref('')
 let timer = null
@@ -138,8 +153,7 @@ const performSearch = (info) => {
   noteApi.findNoteByCondition({searchContent: query}).then(res => {
     const resData = res.data;
     if (resData.respCode === 0) {
-      const listResult = resData.datas.listResult;
-      suggestionsList.value = listResult
+      suggestionsList.value = resData.datas.listResult;
     }
   }).catch(err => {
     message.error("搜索失败")
@@ -223,16 +237,68 @@ const setFileListData = (info) => {
   totalFileSize.value = fileListData.value.length
 }
 
+//
+const showErrorTips = ref(false)
+const authPass = ref('')
+let tmpNoteIndexId = ''
+//密码验证
+const doPassAuth = () => {
+  if  (authPass.value === '') {
+    message.warn("请输入密码")
+    return
+  }
+  noteApi.notePasswordAuth({id: tmpNoteIndexId, password: authPass.value}).then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      showModel.value = showModelFlag.fileListModel
+      updateFileList({"nid": dirSelectKey});
+      //更新面包线
+      updateBreadcrumb({id: dirSelectKey})
+    } else {
+      if (showErrorTips.value === false) {
+        showErrorTips.value = true
+        setTimeout(() => {
+          showErrorTips.value = false
+        }, 1000)
+      }
+
+    }
+  }).catch(err => {
+    message.error("认证失败")
+    console.error(err)
+  })
+}
+
+
 let addNoteUpdate = 0; //see useSelectStore.js
-//订阅监听tree的key变更
+//订阅监听tree的key变更. 当鼠标点击menu tree组件上的某个节点时更新这里
 let tmpChangeKey = '';
 selectStore.$subscribe((mutation, state) => {
   const changeKey = state.dirSelectKey
   if (changeKey !== undefined && tmpChangeKey !== changeKey) {
-    dirSelectKey = tmpChangeKey = changeKey
-    updateFileList({"nid": dirSelectKey});
-    //更新面包线
-    updateBreadcrumb({id: dirSelectKey})
+    //todo 这个地方拦截加密的目录
+    noteApi.findOne({id: changeKey}).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        const noteIndex = resData.datas
+        dirSelectKey = tmpChangeKey = changeKey
+        if (showModel.value !== showModelFlag.fileListModel) {
+          showModel.value = showModelFlag.fileListModel
+        }
+        if (noteIndex.encrypted === '1') {
+          authPass.value = ''
+          showModel.value = showModelFlag.needPasswordModel
+          tmpNoteIndexId = changeKey
+        } else {
+          updateFileList({"nid": dirSelectKey});
+          //更新面包线
+          updateBreadcrumb({id: dirSelectKey})
+        }
+      }
+    }).catch(err => {
+        message.error("请求查询noteIndex错误")
+        console.error(err)
+    })
   }
 
   if (state.addNoteUpdate !== undefined && addNoteUpdate !== state.addNoteUpdate) {
@@ -258,16 +324,16 @@ itemSelectStore.$subscribe((mutation, state) => {
   }
 })
 
-const sortType = {createTime: 0, updateTime: 1, fileName: 2, fileSize: 3}
-
+//排序类型，如按创建时间，更新时间等进行排序
+const sortType = {createTime: 0, updateTime: 1, fileName: 2, fileSize: 3, viewTime: 4}
 //保存asc或desc信息。采用自增模除2 实现 0 desc, 1 asc
 const itemAscType = {
-  recentFile: 0, recentFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0},
-  delFile: 0,  delFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0},
-  treeFile: 0, treeFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0}
+  recentFile: 0, recentFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0, viewTime: 0},
+  delFile: 0,  delFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0, viewTime: 0},
+  treeFile: 0, treeFileClickCnt: {createTime: 0, updateTime: 0, fileName: 0, fileSize: 0, viewTime: 0}
 }
 //保存当前left组件item项的排序信息
-const itemSortType = {recentFile: sortType.createTime, delFile: sortType.createTime, treeFile: sortType.createTime}
+const itemSortType = {recentFile: sortType.createTime, delFile: sortType.createTime, treeFile: sortType.viewTime}
 
 //更新最近文件列表
 const updateRecentFileLists = () => {
@@ -311,7 +377,7 @@ const backParentDir = () => {
   noteApi.findOne({id: id}).then(res => {
     const resData = res.data
     const parentId = resData.datas.parentId;
-    if (parentId == '0' || parentId == 0) {//顶层目录不可再退回
+    if (parentId === '0' || parentId === 0) {//顶层目录不可再退回
       message.warning("当前[" + resData.datas.name + "]已是顶层目录,不可回退")
       return
     }
@@ -465,6 +531,26 @@ const filterMenus = shallowRef({
         } else if (menuCompKeySelected === itemList.rencentFiles) {
           itemSortType.recentFile = sortType.fileSize
           itemAscType.recentFile = (itemAscType.recentFileClickCnt.fileSize++)%2
+          updateRecentFileLists()
+        }
+        return true
+      }
+    },
+    {
+      label: "访问时间",
+      tip: 'ViewTime',
+      click: () => {
+        if (menuCompKeySelected === itemList.treeFiles) {
+          itemSortType.treeFile = sortType.viewTime
+          itemAscType.treeFile = (itemAscType.treeFileClickCnt.viewTime++)%2
+          autoUpdateFileList()
+        } else if (menuCompKeySelected === itemList.delFiles) {
+          itemSortType.delFile = sortType.viewTime
+          itemAscType.delFile = (itemAscType.delFileClickCnt.viewTime++)%2
+          updateDeletedFileLists()
+        } else if (menuCompKeySelected === itemList.rencentFiles) {
+          itemSortType.recentFile = sortType.viewTime
+          itemAscType.recentFile = (itemAscType.recentFileClickCnt.viewTime++)%2
           updateRecentFileLists()
         }
         return true
@@ -1022,7 +1108,6 @@ const readClipboardData = () => {
   })
 }
 
-
 //检查当前环境是否可拖拽文件移动
 const checkCanDrag = () => {
   return menuCompKeySelected === itemList.treeFiles
@@ -1132,6 +1217,7 @@ onMounted(() => {
     const resData = res.data;
     if (resData.respCode === 0) {
       const rootId = resData.datas.id;
+      dirSelectKey = rootId
       //初始化文件列表
       updateFileList({nid: rootId})
 
@@ -1217,6 +1303,48 @@ onMounted(() => {
 <style scoped>
 @import "../assets/search-sty.css";
 
+.f-pd-container {
+  width: 100%; /* 长方形的宽度 */
+  height: 50px; /* 长方形的高度 */
+  border: 1px solid #ccc;
+  display: flex; /* 使用 flexbox 布局 */
+  align-items: center; /* 垂直居中 */
+  padding: 0; /* 去掉内边距 */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.f-pd-input {
+  flex: 1; /* 输入框占据剩余空间 */
+  border: none; /* 移除输入框的边框 */
+  outline: none; /* 移除输入框的焦点样式 */
+  padding: 0 5px; /* 设置左右内边距 */
+  height: 100%; /* 输入框高度与外层相同 */
+  font-size: 1rem;
+}
+
+.f-pd-button {
+  padding: 0 10px; /* 按钮的内边距 */
+  border: none; /* 移除按钮的边框 */
+  cursor: pointer; /* 鼠标悬停时显示为指针 */
+  height: 100%; /* 按钮高度与外层相同 */
+  width: 30%;
+  background-color: #5576BD; /* 默认按钮颜色 */
+  transition: background-color 0.3s; /* 添加过渡效果 */
+  color: white;
+  font-size: small;
+}
+.f-pd-button:hover {
+  background-color: #445E97; /* 鼠标悬停时的颜色 */
+}
+.f-pd-button:active {
+  background-color: #b0b0b0; /* 点击时的颜色 */
+}
+
+.f-pd-tips {
+  color: red;
+  font-size: 1rem;
+  height: 25px;
+}
+
 .files-scope {
   height: 100vh;
   position: relative;
@@ -1292,7 +1420,5 @@ onMounted(() => {
   width: 100%;
   bottom: 0
 }
-
-
 
 </style>

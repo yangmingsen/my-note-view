@@ -121,9 +121,9 @@ const noteTitleName = ref('')
 const showNoteTitleName = ref(false)
 
 const layoutImg = {
-  normalImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd9163afa115496891bc0d',
-  simpleImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd916bafa115496891bc11',
-  editorImgSrc: 'http://api.note.yms.top/note/file/view?id=66dd9165afa115496891bc0f'
+  normalImgSrc: constFlag.apiUrl+'/file/view?id=66dd9163afa115496891bc0d',
+  simpleImgSrc: constFlag.apiUrl+'/file/view?id=66dd916bafa115496891bc11',
+  editorImgSrc: constFlag.apiUrl+'/file/view?id=66dd9165afa115496891bc0f'
 }
 
 const curLayoutImg = ref('')

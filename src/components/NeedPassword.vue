@@ -26,7 +26,6 @@ const emitT = defineEmits(['choose-note'])
 const showErrorTips = ref(false)
 const authPass = ref('')
 
-
 const doPassAuth = () => {
   if  (authPass.value === '') {
     message.warn("请输入密码")
