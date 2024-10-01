@@ -181,6 +181,15 @@ export const RemoteApi = {
     },
 
     /**
+     * 上传零时文件
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async uploadTmpFile(params) {
+        return await request.post(rurl+"/file/uploadTmpFile", params);
+    },
+
+    /**
      * url转pdf
      * @param params {url: xxx, parentId: xxx}
      * @returns {Promise<AxiosResponse<any>>}
@@ -279,6 +288,15 @@ export const RemoteApi = {
      */
     async encryptedReadNote(params) {
         return await request.get(rurl+"/note-index/encrypted-read-note", params, );
+    },
+
+    /**
+     * 取消阅读密码
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async unEncryptedReadNote(params) {
+        return await request.post(rurl+"/note-index/unencrypted-read-note", params, {requestType: 'form'} );
     },
 
 }
