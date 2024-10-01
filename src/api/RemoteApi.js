@@ -46,6 +46,11 @@ export const RemoteApi = {
     },
 
 
+    /**
+     *
+     * @param params {id: xxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
     async findOne(params) {
         return await request.get(rurl+"/note-index/findOne", params);
     },

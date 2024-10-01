@@ -1,5 +1,4 @@
 <template>
-
   <div v-if="showModel === showModelFlag.needPasswordModel">
     <div class="f-pd-tips">
       <span v-if="showErrorTips"> 密码错误，请重新输入</span>
@@ -163,25 +162,121 @@ const performSearch = (info) => {
 
 //搜索列表
 const suggestionsList = ref([])
+//点击搜索列表中的某个时触发
 const sugliClick = (info) => {
   const pid = info.parentId
   const id = info.id
   //更新目录列表
-  dirSelectKey = pid
-  updateFileList({"nid": dirSelectKey})
+  // dirSelectKey = pid
+  setDirSelectKey(pid)
+  updateFileList({"nid": getDirSelectKey()})
   //更新面包线
-  updateBreadcrumb({id: dirSelectKey})
+  updateBreadcrumb({id: getDirSelectKey()})
 
   //向上父父组件传递信息
   info.upTree = true //通知tree组件更新选中情况
   emitT('choose-note', info)
   //更新当前选中
-  fileSelectKey.value = id
+  // fileSelectKey.value = id
+  setFileSelectKey(id)
   //关闭显示
   document.getElementById('search-modal').style.display = 'none';
   //clear search keyword
   keyword.value = ''
   suggestionsList.value = []
+}
+
+//同步一次当前选中的note
+const syncLastVisit = () => {
+  const lastvisit = {
+    lastvisit: {
+      parentId: getDirSelectKey(),
+      id: getFileSelectKey()
+    }
+  }
+  noteApi.updateUserConfig({content: JSON.stringify(lastvisit)}).then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      // message.success("同步LastVisit成功")
+    } else {
+      message.error("同步LastVisit失败")
+    }
+  }).catch(err => {
+    message.error("同步LastVisit错误")
+    console.error(err)
+  })
+}
+
+//初始化加载
+const initLoadFileList = () => {
+  noteApi.findUserConfig().then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      const userConfigObj = JSON.parse(resData.datas)
+      //set lastVisit
+      const lastVisit = userConfigObj.lastvisit
+      if (lastVisit !== undefined) {
+        locationLastVisit(lastVisit)
+      } else {
+        locationDefault()
+      }
+    } else {
+      message.warn("获取FileList初始化数据失败")
+      locationDefault()
+    }
+  }).catch(err => {
+    message.error("初始化FileList错误")
+    console.error(err)
+  })
+}
+
+//初始化，也就是定位root目录
+const locationDefault = () => {
+  //初始化内容
+  noteApi.findRoot().then(res => {
+    const resData = res.data;
+    if (resData.respCode === 0) {
+      const rootId = resData.datas.id;
+      // dirSelectKey = rootId
+      setDirSelectKey(rootId)
+      //初始化文件列表
+      updateFileList({nid: rootId})
+
+      //面包线
+      updateBreadcrumb({id: rootId})
+    }
+  }).catch(err => {
+    message.error("获取root失败")
+    console.error(err)
+  })
+}
+
+//定位上一次访问点
+const locationLastVisit = (info) => {
+  const id = info.id
+  const pid = info.parentId
+  noteApi.findOne({id: id}).then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      const noteIndex = resData.datas;
+      //更新目录列表
+      // dirSelectKey = pid
+      setDirSelectKey(pid)
+      updateFileList({"nid": getDirSelectKey()})
+      //更新面包线
+      updateBreadcrumb({id: getDirSelectKey()})
+
+      //向上父父组件传递信息
+      //通知tree组件更新选中情况
+      emitT('choose-note', noteIndex)
+      //更新当前选中
+      // fileSelectKey.value = id
+      setFileSelectKey(id)
+    }
+  }).catch(err => {
+    message.error("请求获取noteIndex错误")
+    console.error(err)
+  })
 }
 
 const mouseClick = () => {
@@ -218,13 +313,32 @@ const itemRightClick = (event, item) => {
 const selectStore = useSelectStore();
 const itemSelectStore = useItemSelectStore();
 
+//非常重要
 //当前的父目录Key 或者 id 或者 parentId
-let dirSelectKey = '';
+let dirSelectKey = ref('');
+
+const getDirSelectKey = () => {
+  return dirSelectKey.value
+}
+const setDirSelectKey = (key) => {
+  dirSelectKey.value = key
+}
 
 //总文件数
 const totalFileSize = ref(0)
 //当前选中的项目id或key, 也就是fileListData选中的其中一项
 let fileSelectKey = ref('');
+
+const setFileSelectKey = (key) => {
+  fileSelectKey.value = key
+
+  //同步一次
+  syncLastVisit()
+}
+const getFileSelectKey = () => {
+  return fileSelectKey.value
+}
+
 //笔记项目列表
 const fileListData = ref([]);
 //更新文件列表及总文件数量
@@ -251,9 +365,9 @@ const doPassAuth = () => {
     const resData = res.data
     if (resData.respCode === 0) {
       showModel.value = showModelFlag.fileListModel
-      updateFileList({"nid": dirSelectKey});
+      updateFileList({"nid": getDirSelectKey()});
       //更新面包线
-      updateBreadcrumb({id: dirSelectKey})
+      updateBreadcrumb({id: getDirSelectKey()})
     } else {
       if (showErrorTips.value === false) {
         showErrorTips.value = true
@@ -261,14 +375,12 @@ const doPassAuth = () => {
           showErrorTips.value = false
         }, 1000)
       }
-
     }
   }).catch(err => {
     message.error("认证失败")
     console.error(err)
   })
 }
-
 
 let addNoteUpdate = 0; //see useSelectStore.js
 //订阅监听tree的key变更. 当鼠标点击menu tree组件上的某个节点时更新这里
@@ -281,7 +393,8 @@ selectStore.$subscribe((mutation, state) => {
       const resData = res.data
       if (resData.respCode === 0) {
         const noteIndex = resData.datas
-        dirSelectKey = tmpChangeKey = changeKey
+        tmpChangeKey = changeKey
+        setDirSelectKey(changeKey)
         if (showModel.value !== showModelFlag.fileListModel) {
           showModel.value = showModelFlag.fileListModel
         }
@@ -290,9 +403,9 @@ selectStore.$subscribe((mutation, state) => {
           showModel.value = showModelFlag.needPasswordModel
           tmpNoteIndexId = changeKey
         } else {
-          updateFileList({"nid": dirSelectKey});
+          updateFileList({"nid": getDirSelectKey()});
           //更新面包线
-          updateBreadcrumb({id: dirSelectKey})
+          updateBreadcrumb({id: getDirSelectKey()})
         }
       }
     }).catch(err => {
@@ -303,7 +416,7 @@ selectStore.$subscribe((mutation, state) => {
 
   if (state.addNoteUpdate !== undefined && addNoteUpdate !== state.addNoteUpdate) {
     addNoteUpdate = state.addNoteUpdate
-    updateFileList({"nid": dirSelectKey})
+    updateFileList({"nid": getDirSelectKey()})
   }
 })
 
@@ -365,7 +478,8 @@ const updateDeletedFileLists = () => {
 
 //单击选中某个笔记
 const oneceClick = (emit, info) => {
-  fileSelectKey.value = info.id;
+  // fileSelectKey.value = info.id;
+  setFileSelectKey(info.id)
   //告诉主App组件当前menu组件选中的item情况
   info.curMenuItemType = menuCompKeySelected
   emit('choose-note', info)
@@ -373,7 +487,7 @@ const oneceClick = (emit, info) => {
 
 //回到上一层
 const backParentDir = () => {
-  const id = dirSelectKey;
+  const id = getDirSelectKey();
   noteApi.findOne({id: id}).then(res => {
     const resData = res.data
     const parentId = resData.datas.parentId;
@@ -383,9 +497,10 @@ const backParentDir = () => {
     }
 
     updateFileList({nid: parentId})
-    dirSelectKey = parentId //更新当前父级目录id
+    // dirSelectKey = parentId //更新当前父级目录id
+    setDirSelectKey(parentId)
     //更新面包线
-    updateBreadcrumb({id: dirSelectKey})
+    updateBreadcrumb({id: getDirSelectKey()})
   }).catch(err => {
     message.error("操作失败...")
     console.error(err)
@@ -426,10 +541,11 @@ const doubleClick = (info) => {
     }
     showInputModalConfirm(arg)
   } else {
-    dirSelectKey = info.id
-    updateFileList({"nid": dirSelectKey})
+    // dirSelectKey = info.id
+    setDirSelectKey(info.id)
+    updateFileList({"nid": getDirSelectKey()})
     //更新面包线
-    updateBreadcrumb({id: dirSelectKey})
+    updateBreadcrumb({id: getDirSelectKey()})
   }
 
 }
@@ -449,7 +565,7 @@ const updateFileList = (para) => {
 }
 //自动更新文件列表
 const autoUpdateFileList = () => {
-  updateFileList({nid: dirSelectKey})
+  updateFileList({nid: getDirSelectKey()})
 }
 
 //过滤菜单
@@ -607,7 +723,8 @@ const showInputModalConfirm = (info) => {
               console.log(noteIndexData)
               emitT('choose-note', noteIndexData)
               //更新当前选中的key
-              fileSelectKey.value = noteIndexData.id
+              // fileSelectKey.value = noteIndexData.id
+              setFileSelectKey(noteIndexData.id)
             }
           } else {
             message.warning("操作失败")
@@ -695,10 +812,11 @@ const showInputModalConfirm = (info) => {
           if (resData.respCode === 0) {
             message.success("密码正确")
 
-            dirSelectKey = idKey
-            updateFileList({"nid": dirSelectKey})
+            // dirSelectKey = idKey
+            setDirSelectKey(idKey)
+            updateFileList({"nid": getDirSelectKey()})
             //更新面包线
-            updateBreadcrumb({id: dirSelectKey})
+            updateBreadcrumb({id: getDirSelectKey()})
           } else {
             message.error("密码不正确")
           }
@@ -890,7 +1008,7 @@ const spaceMenus = shallowRef({
           isile: '1',
           type: 'wer',
           opType: opType.createNewFile,
-          parentId: dirSelectKey //当前目录id
+          parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
         return true;
@@ -906,7 +1024,7 @@ const spaceMenus = shallowRef({
           isile: '1',
           type: 'md',
           opType: opType.createNewFile,
-          parentId: dirSelectKey //当前目录id
+          parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
         return true;
@@ -922,7 +1040,7 @@ const spaceMenus = shallowRef({
           isile: '1',
           type: 'mindmap',
           opType: opType.createNewFile,
-          parentId: dirSelectKey //当前目录id
+          parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
         return true;
@@ -937,7 +1055,7 @@ const spaceMenus = shallowRef({
           content: '请输入目录名',
           isile: '0',
           opType: opType.createNewFile,
-          parentId: dirSelectKey //当前目录id
+          parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
         return true;
@@ -967,7 +1085,7 @@ const spaceMenus = shallowRef({
           title: 'url转pdf',
           content: '请输入url地址',
           opType: opType.url2pdf,
-          parentId: dirSelectKey //当前目录id
+          parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
         return true;
@@ -1051,7 +1169,7 @@ const delSpaceMenus = shallowRef({
 
 //从剪贴板获取内容
 const readClipboardData = () => {
-  const pid = dirSelectKey
+  const pid = getDirSelectKey()
   navigator.clipboard.read()
     .then(data => {
       data.forEach(item => {
@@ -1177,7 +1295,7 @@ onMounted(() => {
       }
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('parentId', dirSelectKey);
+      formData.append('parentId', getDirSelectKey());
       const reqUrl = constFlag.apiUrl+'/file/uploadNote'
 
       const xhr = new XMLHttpRequest();
@@ -1213,21 +1331,7 @@ onMounted(() => {
   });
 
   //初始化内容
-  noteApi.findRoot().then(res => {
-    const resData = res.data;
-    if (resData.respCode === 0) {
-      const rootId = resData.datas.id;
-      dirSelectKey = rootId
-      //初始化文件列表
-      updateFileList({nid: rootId})
-
-      //面包线
-      updateBreadcrumb({id: rootId})
-    }
-  }).catch(err => {
-    message.error("获取root失败")
-    console.error(err)
-  })
+  initLoadFileList()
 
   //运行拖拽上传
   //drop-file-area
@@ -1243,7 +1347,7 @@ onMounted(() => {
     if (files.length > 0) {
       // 处理文件上传
       const formData = new FormData();
-      formData.append('parentId', dirSelectKey);
+      formData.append('parentId', getDirSelectKey());
       formData.append('file', files[0]);
 
       const xhr = new XMLHttpRequest();
