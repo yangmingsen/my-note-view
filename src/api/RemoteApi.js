@@ -281,4 +281,13 @@ export const RemoteApi = {
         return await request.get(rurl+"/note-index/encrypted-read-note", params, );
     },
 
+    /**
+     * 取消阅读密码
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async unEncryptedReadNote(params) {
+        return await request.post(rurl+"/note-index/unencrypted-read-note", params, {requestType: 'form'} );
+    },
+
 }

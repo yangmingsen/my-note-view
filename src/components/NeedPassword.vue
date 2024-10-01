@@ -8,20 +8,26 @@
         <input type="password" v-model="authPass" @keyup.enter="doPassAuth" class="pd-input" placeholder="请输入阅读密码">
         <button class="pd-button" @click="doPassAuth">确定</button>
       </div>
-      <div><a href="#">取消阅读密码</a></div>
+      <div><a href="#" @click="releaseReadPassword">取消阅读密码</a></div>
     </div>
   </div>
+  <a-modal v-model:open="openFlag1" title="请输入取消阅读密码" @ok="doReleaseReadPassword">
+    <input type="password" style="width: 100%" v-model="iptValue" placeholder="阅读密码">
+  </a-modal>
 </template>
 
 <script setup>
 import {ref} from 'vue'
 import {RemoteApi as noteApi} from '../api/RemoteApi'
+import {useNotifyUpdateFileListStore} from "../store/useNotifyUpdateFileListStore";
 import {message} from "ant-design-vue";
 
 
 const props = defineProps(['noteid'])
 
 const emitT = defineEmits(['choose-note'])
+
+const notifyUpdateFileListStore = useNotifyUpdateFileListStore()
 
 const showErrorTips = ref(false)
 const authPass = ref('')
@@ -51,6 +57,43 @@ const doPassAuth = () => {
     console.error(err)
   })
 }
+
+const openFlag1 = ref(false)
+const iptValue = ref('')
+
+const releaseReadPassword = () => {
+  iptValue.value = ''
+  openFlag1.value = true
+}
+
+const doReleaseReadPassword = () => {
+  const password = iptValue.value
+  noteApi.unEncryptedReadNote({id: props.noteid, password: password}).then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      message.success("取消成功")
+      openFlag1.value = false
+
+      //通知menu组件，重新加载当前笔记文件
+      const noteIndex = resData.datas
+      noteIndex.encrypted = '0'
+      emitT('choose-note', noteIndex)
+
+      //通知更新FileList组件
+      notifyUpdateFileListStore.$patch((state) => {
+        state.updateFileList++
+      })
+
+    } else {
+      message.error("密码不正确")
+    }
+  }).catch(err => {
+    message.error("网络请求数据失败")
+    console.log(err)
+  })
+
+}
+
 
 </script>
 

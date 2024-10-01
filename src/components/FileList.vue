@@ -7,7 +7,7 @@
       <input type="password" v-model="authPass" @keyup.enter="doPassAuth" class="f-pd-input" placeholder="请输入阅读密码">
       <button class="f-pd-button" @click="doPassAuth">确定</button>
     </div>
-    <div><a href="#">取消阅读密码</a></div>
+    <div><a href="#" @click="doReleaseReadPassword2">取消阅读密码</a></div>
   </div>
 
   <div v-if="showModel === showModelFlag.fileListModel" class="files-scope">
@@ -110,6 +110,7 @@ import {menusEvent} from 'vue3-menus';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
 import {useItemSelectStore} from "../store/useItemSelectStore";
+import {useNotifyUpdateFileListStore} from "../store/useNotifyUpdateFileListStore";
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const emitT = defineEmits(['choose-note'])
@@ -298,10 +299,69 @@ const spaceClick = (event) => {
   event.stopPropagation();
 }
 
+const needReadPassword =  {
+  label: "阅读密码",
+  tip: 'encrypted',
+  click: (menu, arg) => {
+    const id = arg.id;
+    noteApi.encryptedReadNote({id: id}).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        autoUpdateFileList()
+
+        //通知更新面板
+        arg.encrypted = '1'
+        emitT('choose-note', arg)
+      } else {
+        message.error("网络请求加密笔记失败")
+      }
+    }).catch(err => {
+      message.error("网络请求加密笔记错误")
+      console.error(err)
+    })
+
+    return true;
+  }
+}
+
+const doReleaseReadPassword2 = () => {
+  doReleaseReadPassword({id: tmpNoteIndexId})
+}
+const doReleaseReadPassword = (info) => {
+  const arg = {
+    title: '请输入取消密码',
+    content: '',
+    key: info.id,
+    opType: opType.unEncrypted,
+    inputType: 'password'
+  }
+  showInputModalConfirm(arg)
+}
+
+const releaseReadPassword = {
+  label: "取消阅读密码",
+  tip: 'UnEncrypted',
+  click: (menu, arg) => {
+    const id = arg.id;
+    doReleaseReadPassword({id: id})
+    return true;
+  }
+}
+
 //右击某个项目区域时显示的菜单
 const itemRightClick = (event, item) => {
   if (menuCompKeySelected === itemList.treeFiles) {
-    menusEvent(event, fileItemMenus.value, item)
+    const itemMenus = {menus: []}
+    for (let item of fileItemMenus.value.menus) {
+      itemMenus.menus.push(item)
+    }
+    if (item.encrypted === '0') {
+      itemMenus.menus.push(needReadPassword)
+    } else {
+      itemMenus.menus.push(releaseReadPassword)
+    }
+
+    menusEvent(event, itemMenus, item)
   } else if (menuCompKeySelected === itemList.delFiles) {
     menusEvent(event, delItemMenus.value, item)
   }
@@ -312,11 +372,11 @@ const itemRightClick = (event, item) => {
 
 const selectStore = useSelectStore();
 const itemSelectStore = useItemSelectStore();
+const notifyUpdateFileListStore = useNotifyUpdateFileListStore();
 
 //非常重要
 //当前的父目录Key 或者 id 或者 parentId
 let dirSelectKey = ref('');
-
 const getDirSelectKey = () => {
   return dirSelectKey.value
 }
@@ -328,7 +388,6 @@ const setDirSelectKey = (key) => {
 const totalFileSize = ref(0)
 //当前选中的项目id或key, 也就是fileListData选中的其中一项
 let fileSelectKey = ref('');
-
 const setFileSelectKey = (key) => {
   fileSelectKey.value = key
 
@@ -381,6 +440,15 @@ const doPassAuth = () => {
     console.error(err)
   })
 }
+
+//监听更新当前文件列表
+notifyUpdateFileListStore.$subscribe((mutation, state) => {
+  const changeKey = state.updateFileList
+  if (changeKey !== undefined) {
+    autoUpdateFileList()
+  }
+})
+
 
 let addNoteUpdate = 0; //see useSelectStore.js
 //订阅监听tree的key变更. 当鼠标点击menu tree组件上的某个节点时更新这里
@@ -824,6 +892,19 @@ const showInputModalConfirm = (info) => {
           message.error("网络请求数据失败")
           console.log(err)
         })
+      } else if (info.opType === opType.unEncrypted) {
+          noteApi.unEncryptedReadNote({id: idKey, password: iptV}).then(res => {
+            const resData = res.data
+            if (resData.respCode === 0) {
+              message.success("取消成功")
+              autoUpdateFileList()
+            } else {
+              message.error("密码不正确")
+            }
+          }).catch(err => {
+            message.error("网络请求数据失败")
+            console.log(err)
+          })
       }
 
     },
@@ -843,7 +924,7 @@ const notifyParentDirUpdate = () => {
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
-  destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7}
+  destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8}
 //右击某个文件item的菜单
 const fileItemMenus = shallowRef({
   menus: [
@@ -860,7 +941,7 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
-    },
+    }, //0
     {
       label: "新目录",
       tip: 'NewDir',
@@ -873,7 +954,7 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
-    },
+    },//1
     {
       label: "重命名",
       tip: 'rename',
@@ -885,7 +966,7 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
-    },
+    },//2
     {
       label: "删除",
       tip: 'del',
@@ -897,7 +978,7 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
-    },
+    },//3
     {
       label: "复制预览地址",
       tip: 'preview',
@@ -937,7 +1018,7 @@ const fileItemMenus = shallowRef({
 
         return true;
       }
-    },
+    },//4
     {
       label: "下载",
       tip: 'download',
@@ -968,31 +1049,7 @@ const fileItemMenus = shallowRef({
 
         return true;
       }
-    },
-    {
-      label: "阅读密码",
-      tip: 'encrypted',
-      click: (menu, arg) => {
-        const id = arg.id;
-        noteApi.encryptedReadNote({id: id}).then(res => {
-          const resData = res.data
-          if (resData.respCode === 0) {
-            autoUpdateFileList()
-
-            //通知更新面板
-            arg.encrypted = '1'
-            emitT('choose-note', arg)
-          } else {
-            message.error("网络请求加密笔记失败")
-          }
-        }).catch(err => {
-          message.error("网络请求加密笔记错误")
-          console.error(err)
-        })
-
-        return true;
-      }
-    }
+    }//5
   ]
 })
 //空白区域右击菜单列表
