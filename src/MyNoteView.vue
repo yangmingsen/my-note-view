@@ -121,9 +121,9 @@ const noteTitleName = ref('')
 const showNoteTitleName = ref(false)
 
 const layoutImg = {
-  normalImgSrc: constFlag.apiUrl+'/file/view?id=66dd9163afa115496891bc0d',
-  simpleImgSrc: constFlag.apiUrl+'/file/view?id=66dd916bafa115496891bc11',
-  editorImgSrc: constFlag.apiUrl+'/file/view?id=66dd9165afa115496891bc0f'
+  normalImgSrc: constFlag.apiUrl+'/file/view?id=66fb5dad56e8fc4eb5d37a23',
+  simpleImgSrc: constFlag.apiUrl+'/file/view?id=66fb5da556e8fc4eb5d37a1f',
+  editorImgSrc: constFlag.apiUrl+'/file/view?id=66fb5da956e8fc4eb5d37a21'
 }
 
 const curLayoutImg = ref('')
