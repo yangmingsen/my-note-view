@@ -31,7 +31,6 @@
     </div>
   </div>
 
-
   <a-modal v-model:open="showUserConfigFlag"  width="800px"  title="用户配置" @cancel="closeUserConfigModal">
     <template #footer>
     </template>
@@ -434,6 +433,10 @@ const menus = shallowRef({
   overflow-y: auto;
   /*background-color: rgba(255, 255, 255, 0.8); !* 半透明背景颜色 *!*/
   /*border: 1px solid;*/
+}
+
+.dir-list :deep(.ant-tree ) {
+  background: unset;
 }
 
 </style>

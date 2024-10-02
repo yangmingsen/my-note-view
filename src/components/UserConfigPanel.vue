@@ -25,7 +25,8 @@
     <a-tab-pane class="user-config-panel" key="2" tab="背景图片">
       <div class="cust-bg-img">
         <div class="cust-bg-img-show">
-          <img :src="bgImgSrc" v-if="hasDefaultImg">
+<!--          <img :src="bgImgSrc" v-if="hasDefaultImg">-->
+          <a-image :src="bgImgSrc"   v-if="hasDefaultImg"  />
           <img src="../assets/empty-bg.png" v-if="!hasDefaultImg">
         </div>
         <div class="bg-upload-progress" v-if="progressOpen">
@@ -107,8 +108,10 @@ const doBgImgUpload = (event) => {
       } else {
         message.error("文件上传失败")
       }
-      progressOpen.value = false
-      progressPercent.value = 0
+
+      setTimeout(() => {
+        progressOpen.value = false
+      }, 2 * 1000)
     };
 
     // 发送文件
@@ -222,6 +225,10 @@ onMounted(() => {
 .cust-bg-img-show img {
   max-width: 100%;
   height: 100%;
+}
+
+.bg-upload-progress {
+  max-width: 100%;
 }
 
 </style>
