@@ -271,7 +271,6 @@ const locationLastVisit = (info) => {
       //通知tree组件更新选中情况
       emitT('choose-note', noteIndex)
       //更新当前选中
-      // fileSelectKey.value = id
       setFileSelectKey(id)
     }
   }).catch(err => {
@@ -355,8 +354,8 @@ const itemRightClick = (event, item) => {
     for (let item of fileItemMenus.value.menus) {
       itemMenus.menus.push(item)
     }
-    if (item.encrypted === '0') {
-      itemMenus.menus.push(needReadPasswordMenu)
+    if (item.encrypted === '0') {//无加密右击场景
+      itemMenus.menus.push(needReadPasswordMenu, copyPreviewAddrMenu, downloadNoteMenu)
     } else {
       itemMenus.menus.push(releaseReadPasswordMenu)
     }
@@ -985,6 +984,77 @@ const createDirMenu = {
     return true;
   }
 }
+const copyPreviewAddrMenu =    {
+  label: "复制预览地址",
+  tip: 'preview',
+  click: (menu, arg) => {
+    if (arg.isile === '0') {
+      message.warning("不支持文件夹预览")
+      return true
+    }
+
+    if (arg.type === 'md' ||
+        arg.type === 'wer' ||
+        arg.type === 'doc' ||
+        arg.type === 'docx' ||
+        arg.type === 'xls' ||
+        arg.type === 'xlsx' ||
+        arg.type === 'ppt' ||
+        arg.type === 'pptx'
+    ) {
+      message.warning("不支持Md,Wer,Office文件预览")
+      return true
+    }
+
+    const id = arg.id;
+    noteApi.getNoteAndSite({id: id}).then(res => {
+      const noteFile = res.data.datas.noteFile
+      const previewUrl = noteFile.url
+      navigator.clipboard.writeText(previewUrl).then(() => {
+        message.success("复制到剪切板成功")
+      }).catch(err => {
+        message.error("复制到剪切板失败")
+        console.error(err)
+      })
+    }).catch(err => {
+      message.error("网络请求信息失败")
+      console.error(err)
+    })
+
+    return true;
+  }
+}
+const downloadNoteMenu = {
+  label: "下载",
+  tip: 'download',
+  click: (menu, arg) => {
+    if (arg.isile === '0') {
+      message.warning("不支持文件夹下载")
+      return true
+    }
+    if (arg.type === 'md' ||
+        arg.type === 'wer' ||
+        arg.type === 'mindmap'
+
+    ) {
+      message.warning("不支持Md,Wer文件下载")
+      return true
+    }
+
+    const id = arg.id;
+    noteApi.getNoteAndSite({id: id}).then(res => {
+      const noteFile = res.data.datas.noteFile
+      const downloadUrl = noteFile.url.replace('view', 'download')
+      window.open(downloadUrl)
+      message.success("下载成功")
+    }).catch(err => {
+      message.error("网络请求信息下载失败")
+      console.error(err)
+    })
+
+    return true;
+  }
+}
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
@@ -1025,78 +1095,7 @@ const fileItemMenus = shallowRef({
         showInputModalConfirm(arg)
         return true;
       }
-    },//3
-    {
-      label: "复制预览地址",
-      tip: 'preview',
-      click: (menu, arg) => {
-        if (arg.isile === '0') {
-          message.warning("不支持文件夹预览")
-          return true
-        }
-
-        if (arg.type === 'md' ||
-            arg.type === 'wer' ||
-            arg.type === 'doc' ||
-            arg.type === 'docx' ||
-            arg.type === 'xls' ||
-            arg.type === 'xlsx' ||
-            arg.type === 'ppt' ||
-            arg.type === 'pptx'
-        ) {
-          message.warning("不支持Md,Wer,Office文件预览")
-          return true
-        }
-
-        const id = arg.id;
-        noteApi.getNoteAndSite({id: id}).then(res => {
-          const noteFile = res.data.datas.noteFile
-          const previewUrl = noteFile.url
-          navigator.clipboard.writeText(previewUrl).then(() => {
-            message.success("复制到剪切板成功")
-          }).catch(err => {
-            message.error("复制到剪切板失败")
-            console.error(err)
-          })
-        }).catch(err => {
-          message.error("网络请求信息失败")
-          console.error(err)
-        })
-
-        return true;
-      }
-    },//4
-    {
-      label: "下载",
-      tip: 'download',
-      click: (menu, arg) => {
-        if (arg.isile === '0') {
-          message.warning("不支持文件夹下载")
-          return true
-        }
-        if (arg.type === 'md' ||
-            arg.type === 'wer' ||
-            arg.type === 'mindmap'
-
-        ) {
-          message.warning("不支持Md,Wer文件下载")
-          return true
-        }
-
-        const id = arg.id;
-        noteApi.getNoteAndSite({id: id}).then(res => {
-          const noteFile = res.data.datas.noteFile
-          const downloadUrl = noteFile.url.replace('view', 'download')
-          window.open(downloadUrl)
-          message.success("下载成功")
-        }).catch(err => {
-          message.error("网络请求信息下载失败")
-          console.error(err)
-        })
-
-        return true;
-      }
-    }//5
+    }//3
   ]
 })
 //空白区域右击菜单列表
@@ -1326,6 +1325,7 @@ const doDrop = (e, toTarget) => {
   }
 }
 
+//上传进度条
 const progressOpen = ref(false)
 const progressPercent =ref(0)
 

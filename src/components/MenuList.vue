@@ -31,7 +31,6 @@
     </div>
   </div>
 
-
   <a-modal v-model:open="showUserConfigFlag"  width="800px"  title="用户配置" @cancel="closeUserConfigModal">
     <template #footer>
     </template>
@@ -41,7 +40,7 @@
 </template>
 
 <script setup>
-import {ref, shallowRef, createVNode, watch} from 'vue';
+import {ref, shallowRef, createVNode, watch, onMounted} from 'vue';
 import {menusEvent} from 'vue3-menus';
 import {message, Modal} from 'ant-design-vue';
 import {
@@ -77,18 +76,16 @@ watch(() => props.upSelectKey, (pidN, pidO) => {
   })
 })
 
-
+//是否开启用户设置面板
 const showUserConfigFlag = ref(false)
 const showUserConfigModal = () => {
   showUserConfigFlag.value = true
-  // document.querySelector('.ant-modal-footer').style.display = 'none';
 }
 const closeUserConfigModal = () => {
   showUserConfigFlag.value = false
 }
 
-
-//当前展开树节点
+//当前展开树节点，是treeSelectKeys的父节点id
 const treeExpandKeys = ref([])
 //当前挑选的key..;  我现在在想要不要替换掉curSelectKey这个，但是吧这个又是数组
 const treeSelectKeys = ref([])
@@ -120,7 +117,7 @@ const clickManualItem = (info) => {
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
   let iptV = info.title || ' '
-  const nid = info.key
+  const nid = info.key //这里的nid代表要创建的笔记/文件夹的parentId
   Modal.confirm({
     title: info.name,
     icon: createVNode(PlusCircleOutlined),
@@ -140,7 +137,6 @@ const showInputModalConfirm = (info) => {
           noteApi.addNote(submitData).then(res => {
             const resData = res.data
             if (resData.respCode === 0) {
-              message.success("操作成功")
               const info = {nid: nid}
               reloadDirAndFileList(info);
             } else {
@@ -202,10 +198,10 @@ const showInputModalConfirm = (info) => {
 const reloadDirAndFileList = (info) => {
   const nid = info.nid;
   //重新加载目录树
-  loadData();
+  loadTree()
 
   //通知文件列表组件更新最新数据
-  if (nid != curSelectKey) {
+  if (nid !== curSelectKey) {
     //更新当前选中的目录Key
     //这种情况是如果用户在没有选中父目录的情况，直接右击某个目录进行新建
     selectStore.$patch((state) => {
@@ -247,7 +243,6 @@ selectStore.$subscribe((mutation, state) => {
   }
 })
 
-
 //鼠标右击tree情况
 const rightClick = info => {
   //更新选中的item项
@@ -258,7 +253,26 @@ const rightClick = info => {
   menusEvent(info.event, menus.value, dObj);
 }
 
+//重新加载tree且指定expendKeys和selectKeys
+const loadTree = (info) => {
+  noteApi.getAntNoteTree().then((res) => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      treeData.value = []
+      for (let v of resData.datas) {
+        treeData.value.push(v);
+      }
+    } else {
+      message.error("请求数据失败")
+    }
+  }).catch((err) => {
+    message.error("调用出错了")
+    console.log(err)
+  });
+}
+
 //store treeData
+//tree树存储
 const treeData = ref([]);
 //加载目录树(all)
 const loadData = () => {
@@ -274,15 +288,12 @@ const loadData = () => {
       const rootKey = tmpNotes[0].key
       setTreeExpandKeys({ids: [rootKey]})
     }
-
-
   }).catch((err) => {
     message.error("调用出错了")
     console.log(err)
   });
 }
-//init load
-loadData();
+
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3}
@@ -339,6 +350,11 @@ const menus = shallowRef({
     }
   ]
 });
+
+onMounted( () => {
+  //init load
+  loadData();
+})
 
 </script>
 
@@ -434,6 +450,10 @@ const menus = shallowRef({
   overflow-y: auto;
   /*background-color: rgba(255, 255, 255, 0.8); !* 半透明背景颜色 *!*/
   /*border: 1px solid;*/
+}
+
+.dir-list :deep(.ant-tree ) {
+  background: unset;
 }
 
 </style>
