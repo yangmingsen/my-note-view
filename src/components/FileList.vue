@@ -355,7 +355,10 @@ const itemRightClick = (event, item) => {
       itemMenus.menus.push(item)
     }
     if (item.encrypted === '0') {//无加密右击场景
-      itemMenus.menus.push(needReadPasswordMenu, copyPreviewAddrMenu, downloadNoteMenu)
+      itemMenus.menus.push(needReadPasswordMenu)
+      if (item.type === '1') { //文件场景需要copy,download. 文件夹不需要
+        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu)
+      }
     } else {
       itemMenus.menus.push(releaseReadPasswordMenu)
     }
@@ -1059,7 +1062,7 @@ const downloadNoteMenu = {
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
   destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8}
-//右击某个文件item的菜单
+//右击某个文件item的菜单 基础[新建笔记,新建目录,重命名,删除]
 const fileItemMenus = shallowRef({
   menus: [
     {
