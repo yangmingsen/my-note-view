@@ -67,6 +67,7 @@ const chooseEditor = (info) => {
 
   //加密拦截点
   if (info.encrypted === '1' && info.isile === '1') {
+
     editorSelected.value = editorFlag.needPassword
     needPasswordId.value = noteId
     return

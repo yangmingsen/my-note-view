@@ -115,6 +115,7 @@ import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const emitT = defineEmits(['choose-note'])
 
+//flm 文件列表, npd需要密码验证面板
 const showModelFlag = {fileListModel: 'flm', needPasswordModel: 'npd'}
 const showModel = ref(showModelFlag.fileListModel)
 
@@ -356,7 +357,7 @@ const itemRightClick = (event, item) => {
     }
     if (item.encrypted === '0') {//无加密右击场景
       itemMenus.menus.push(needReadPasswordMenu)
-      if (item.type === '1') { //文件场景需要copy,download. 文件夹不需要
+      if (item.isile === '1') { //文件场景需要copy,download. 文件夹不需要
         itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu)
       }
     } else {
