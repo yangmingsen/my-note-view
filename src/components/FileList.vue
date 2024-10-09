@@ -80,11 +80,20 @@
     </div>
     <div class="file-items-footer">
       <span>当前所在目录:</span>
-      <a-breadcrumb>
+      <a-breadcrumb v-if="menuSelected === itemList.treeFiles" >
         <a-breadcrumb-item v-for="item in breadcrumbList">
           <a href="#">{{ item.name }}</a>
         </a-breadcrumb-item>
       </a-breadcrumb>
+      <div v-if="menuSelected === itemList.recentVisit">
+        <span >最近访问</span>
+      </div>
+      <div v-if="menuSelected === itemList.rencentFiles">
+        <span >最新文档</span>
+      </div>
+      <div v-if="menuSelected === itemList.delFiles">
+        <span >最近删除</span>
+      </div>
       <span>一共：{{ totalFileSize }}个项目</span>
     </div>
   </div>
@@ -115,6 +124,7 @@ import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 
 const emitT = defineEmits(['choose-note'])
 
+//flm 文件列表, npd需要密码验证面板
 const showModelFlag = {fileListModel: 'flm', needPasswordModel: 'npd'}
 const showModel = ref(showModelFlag.fileListModel)
 
@@ -355,7 +365,10 @@ const itemRightClick = (event, item) => {
       itemMenus.menus.push(item)
     }
     if (item.encrypted === '0') {//无加密右击场景
-      itemMenus.menus.push(needReadPasswordMenu, copyPreviewAddrMenu, downloadNoteMenu)
+      itemMenus.menus.push(needReadPasswordMenu)
+      if (item.isile === '1') { //文件场景需要copy,download. 文件夹不需要
+        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu)
+      }
     } else {
       itemMenus.menus.push(releaseReadPasswordMenu)
     }
@@ -490,15 +503,20 @@ selectStore.$subscribe((mutation, state) => {
 const itemList = constFlag.itemList
 //当前left面板选中的item
 let menuCompKeySelected = itemList.treeFiles
+//是否显示面包线
+const menuSelected = ref(menuCompKeySelected)
 //监听menu组件item(最近删除,tree树,最近更新...)改变情况
 itemSelectStore.$subscribe((mutation, state) => {
   const curKey = menuCompKeySelected = state.itemSelectKey
+  menuSelected.value = curKey
   curKey === itemList.treeFiles ? canDoDrag.value = true : canDoDrag.value = false
   if (curKey !== undefined) {
     if (curKey === itemList.rencentFiles) {
       updateRecentFileLists()
     } else if (curKey === itemList.delFiles) {
       updateDeletedFileLists()
+    } else if (curKey === itemList.recentVisit) {
+      updateRecentVisitList()
     }
   }
 })
@@ -513,6 +531,21 @@ const itemAscType = {
 }
 //保存当前left组件item项的排序信息
 const itemSortType = {recentFile: sortType.createTime, delFile: sortType.createTime, treeFile: sortType.viewTime}
+
+//更新最近访问列表
+const updateRecentVisitList = () => {
+  noteApi.getRecentVisitList().then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      setFileListData({data: resData.datas})
+    } else {
+      message.warn("获取数据失败")
+    }
+  }).catch(err => {
+    message.error("数据获取错误")
+    console.error(err)
+  })
+}
 
 //更新最近文件列表
 const updateRecentFileLists = () => {
@@ -1059,7 +1092,7 @@ const downloadNoteMenu = {
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
   destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8}
-//右击某个文件item的菜单
+//右击某个文件item的菜单 基础[新建笔记,新建目录,重命名,删除]
 const fileItemMenus = shallowRef({
   menus: [
     {

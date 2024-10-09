@@ -110,6 +110,24 @@ export const RemoteApi = {
     },
 
     /**
+     * 获取最近访问文件
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async getRecentVisitList(params) {
+        return await request.get(rurl+"/note-index/recentVisitList", params);
+    },
+
+    /**
+     * tree点击情况记录
+     * @param params {id: xxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async treeClick(params) {
+        return await request.get(rurl+"/note-index/treeClick", params);
+    },
+
+    /**
      * 获取删除的列表，按删除时间排序
      * @param params
      * @returns {Promise<AxiosResponse<any>>}
