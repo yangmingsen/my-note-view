@@ -304,6 +304,7 @@ const layoutImgFlag = ref(3)
                 @choose-note="(info) => {chooseEditor(info)}"
                 :noteid="needPasswordId"
                 v-if="editorSelected === editorFlag.needPassword"></NeedPassword>
+            <CsvPreviewPanel v-if="editorSelected === editorFlag.csvPreview"></CsvPreviewPanel>
             <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
           </div>
           <div class="content-scope-fun">

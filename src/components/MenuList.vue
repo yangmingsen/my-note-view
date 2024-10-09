@@ -6,6 +6,12 @@
     <!--    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>-->
     <div class="new-content">+ 新文档</div>
     <div class="item-li"
+         @click="clickManualItem({id: itemList.recentVisit})"
+         :class="itemSelected === itemList.recentVisit ? 'item-active' : ''"
+    >
+      <span><FireTwoTone /> &nbsp;&nbsp;最近访问</span>
+    </div>
+    <div class="item-li"
          @click="clickManualItem({id: itemList.rencentFiles})"
          :class="itemSelected === itemList.rencentFiles ? 'item-active' : ''"
     >
@@ -45,7 +51,7 @@ import {menusEvent} from 'vue3-menus';
 import {message, Modal} from 'ant-design-vue';
 import {
   PlusCircleOutlined, DeleteOutlined, HistoryOutlined,
-  DeleteTwoTone
+  DeleteTwoTone, FireTwoTone
 } from '@ant-design/icons-vue';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
@@ -114,6 +120,16 @@ const clickManualItem = (info) => {
 
   }
 }
+
+//记录点击情况
+const recordClick = (info) => {
+  const noteId = info.id
+  noteApi.treeClick({id: noteId}).catch(err => {
+    message.error("treeClick异常")
+    console.error(err)
+  })
+}
+
 //右击选择菜单时对话框
 const showInputModalConfirm = (info) => {
   let iptV = info.title || ' '
@@ -232,6 +248,9 @@ const clickKey = (key) => {
   selectStore.$patch((state) => {
     state.dirSelectKey = curSelectKey;
   })
+
+  //记录
+  recordClick({id: curSelectKey})
 }
 
 //监听子目录变化，及时更新tree
