@@ -66,7 +66,7 @@ const chooseEditor = (info) => {
   showNoteTitleName.value = true
 
   //加密拦截点
-  if (info.encrypted === '1' && info.isile === '1') {
+  if (info.encrypted === '1' && info.isFile === '1') {
 
     editorSelected.value = editorFlag.needPassword
     needPasswordId.value = noteId
@@ -74,7 +74,7 @@ const chooseEditor = (info) => {
   }
 
 
-  if (info.isile === '0') {
+  if (info.isFile === '0') {
     editorSelected.value = editorFlag.blank
     showNoteTitleName.value = false
   } else {

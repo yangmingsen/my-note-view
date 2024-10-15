@@ -144,11 +144,11 @@ const showInputModalConfirm = (info) => {
       iptV = iptE.value;
 
       if (info.opType === opType.createNewFile || info.opType === opType.createDir) {
-        if (info.isile === '0') { //目录
+        if (info.isFile === '0') { //目录
           const submitData = {
             parentId: nid,
             name: iptV,
-            isile: '0'
+            isFile: '0'
           }
           noteApi.addNote(submitData).then(res => {
             const resData = res.data
@@ -327,7 +327,7 @@ const menus = shallowRef({
           click: (menu, arg) => {//arg 是传入的参数
             arg.name = menu.label
             arg.title = '请输入新文件名称'
-            arg.isile = '1' //文件
+            arg.isFile = '1' //文件
             arg.type = 'wer' //暂时默认wer文件
             arg.opType = opType.createNewFile //
             showInputModalConfirm(arg)
@@ -339,7 +339,7 @@ const menus = shallowRef({
           click: (menu, arg) => {//arg 是传入的参数
             arg.name = menu.label
             arg.title = '请输入新目录名称'
-            arg.isile = '0' //目录
+            arg.isFile = '0' //目录
             arg.opType = opType.createDir
             showInputModalConfirm(arg)
             return true;

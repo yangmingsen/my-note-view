@@ -39,7 +39,11 @@
         </div>
       </div>
     </a-tab-pane>
-    <a-tab-pane class="user-config-panel" key="3" tab="设置">还没想好做什么呢</a-tab-pane>
+    <a-tab-pane class="user-config-panel" key="3" tab="设置">
+      <button @click="rebuildIndex">更新索引</button>
+      <button @click="syncLocalNote">同步本地笔记</button>
+
+    </a-tab-pane>
   </a-tabs>
 </template>
 
@@ -142,6 +146,26 @@ const syncCustConfig = () => {
 const notifyOtherCompUpdate = () => {
   globalNotifyStore.$patch((state) => {
     state.updateBgImgCnt++
+  })
+}
+
+const rebuildIndex = () => {
+  noteApi.indexRebuild().then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      message.success("成功..")
+    }
+  })
+}
+
+const syncLocalNote = () => {
+  noteApi.syncLocalNote().then(res => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      message.success("成功..")
+    } else {
+      message.error("同步失败")
+    }
   })
 }
 
