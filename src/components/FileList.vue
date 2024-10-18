@@ -34,7 +34,7 @@
       >
         <div class="item-meta-info">
           <div class="item-meta-info-type">
-            <span v-if="item.isile === '0'"><FolderTwoTone /></span>
+            <span v-if="item.isFile === '0'"><FolderTwoTone /></span>
             <span v-else-if="item.type==='md'"><FileMarkdownTwoTone /></span>
             <span v-else-if="item.type==='wer'"><FileTwoTone /></span>
             <span v-else-if="item.type==='xls' || item.type==='xlsx'"><FileExcelTwoTone /></span>
@@ -58,7 +58,7 @@
         </div>
         <div>
           <span class="item-info-tip">{{item.createTime}}</span>
-          <span class="item-info-tip" v-if="item.isile === '0'"></span>
+          <span class="item-info-tip" v-if="item.isFile === '0'"></span>
           <span class="item-info-tip" v-else-if="item.size > 1048576">&nbsp;&nbsp;&nbsp;{{(item.size / 1048576).toFixed(2)}}MB</span>
           <span class="item-info-tip" v-else-if="item.size > 1024">&nbsp;&nbsp;&nbsp;{{(item.size / 1024).toFixed(2)}}KB</span>
           <span class="item-info-tip" v-else>&nbsp;&nbsp;&nbsp;{{item.size}}B</span>
@@ -366,7 +366,7 @@ const itemRightClick = (event, item) => {
     }
     if (item.encrypted === '0') {//无加密右击场景
       itemMenus.menus.push(needReadPasswordMenu)
-      if (item.isile === '1') { //文件场景需要copy,download. 文件夹不需要
+      if (item.isFile === '1') { //文件场景需要copy,download. 文件夹不需要
         itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu)
       }
     } else {
@@ -623,7 +623,7 @@ const updateBreadcrumb = (info) => {
 
 //双击某个项目时
 const doubleClick = (info) => {
-  if (info.isile !== '0') {
+  if (info.isFile !== '0') {
     return
   }
   if (menuCompKeySelected === itemList.delFiles) {
@@ -798,9 +798,9 @@ const showInputModalConfirm = (info) => {
         const submitData = {
           parentId: parentId,
           name: iptV,
-          isile: info.isile
+          isFile: info.isFile
         }
-        if (info.isile === '1') { //文件
+        if (info.isFile === '1') { //文件
           submitData.type = info.type
         }
         noteApi.addNote(submitData).then(res => {
@@ -810,11 +810,11 @@ const showInputModalConfirm = (info) => {
             const upPara = {nid: parentId}
             //新建成功后更新当前文件列表
             updateFileList(upPara)
-            if (submitData.isile === '0') {//是目录时更新父tree
+            if (submitData.isFile === '0') {//是目录时更新父tree
               notifyParentDirUpdate()
             }
             //如果当前创建的是文件。就更新主editor面板为当前新建的文件
-            if (info.isile === '1') {
+            if (info.isFile === '1') {
               const noteIndexData  = resData.datas
 
               //告诉主App组件当前menu组件选中的item情况
@@ -961,7 +961,7 @@ const createMarkdownMenu =  {
     const arg = {
       title: '新文件(Markdown)',
       content: '请输入文件名',
-      isile: '1',
+      isFile: '1',
       type: 'md',
       opType: opType.createNewFile,
       parentId: getDirSelectKey() //当前目录id
@@ -977,7 +977,7 @@ const createWerMenu = {
     const arg = {
       title: '新文件(Wer)',
       content: '请输入文件名',
-      isile: '1',
+      isFile: '1',
       type: 'wer',
       opType: opType.createNewFile,
       parentId: getDirSelectKey() //当前目录id
@@ -993,7 +993,7 @@ const createMindMapMenu = {
     const arg = {
       title: '新文件(MindMap)',
       content: '请输入文件名',
-      isile: '1',
+      isFile: '1',
       type: 'mindmap',
       opType: opType.createNewFile,
       parentId: getDirSelectKey() //当前目录id
@@ -1009,7 +1009,7 @@ const createDirMenu = {
     const arg = {
       title: '新目录',
       content: '请输入目录名',
-      isile: '0',
+      isFile: '0',
       opType: opType.createDir,
       parentId: getDirSelectKey() //当前目录id
     }
@@ -1021,7 +1021,7 @@ const copyPreviewAddrMenu =    {
   label: "复制预览地址",
   tip: 'preview',
   click: (menu, arg) => {
-    if (arg.isile === '0') {
+    if (arg.isFile === '0') {
       message.warning("不支持文件夹预览")
       return true
     }
@@ -1061,7 +1061,7 @@ const downloadNoteMenu = {
   label: "下载",
   tip: 'download',
   click: (menu, arg) => {
-    if (arg.isile === '0') {
+    if (arg.isFile === '0') {
       message.warning("不支持文件夹下载")
       return true
     }
@@ -1338,8 +1338,8 @@ const doDrop = (e, toTarget) => {
   e.preventDefault();
   dragOverStyId.value = ''
   if (dragTargetInfo && dragTargetInfo !== toTarget) {
-    //isile: o dir, 1 file
-    if (toTarget.isile === '1') {
+    //isFile: o dir, 1 file
+    if (toTarget.isFile === '1') {
       message.warn("目标必须是目录")
       return
     }
@@ -1471,6 +1471,8 @@ onMounted(() => {
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'k') {
       e.preventDefault();
+      //clear keyword
+      keyword.value = ''
       const searchModal = document.getElementById('search-modal');
       searchModal.classList.remove('hide');
       searchModal.style.display = 'block';

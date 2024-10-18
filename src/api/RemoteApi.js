@@ -317,4 +317,23 @@ export const RemoteApi = {
         return await request.post(rurl+"/note-index/unencrypted-read-note", params, {requestType: 'form'} );
     },
 
+
+    /**
+     * 测试使用
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async indexRebuild(params) {
+        return await request.get(rurl+"/note-data/index-rebuild", params);
+    },
+
+    /**
+     * 同步本地笔记
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async syncLocalNote(params) {
+        return await request.get(rurl+"/file/syncAll", params);
+    },
+
 }
