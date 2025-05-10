@@ -276,7 +276,6 @@ const locationLastVisit = (info) => {
       updateFileList({"nid": getDirSelectKey()})
       //更新面包线
       updateBreadcrumb({id: getDirSelectKey()})
-
       //向上父父组件传递信息
       //通知tree组件更新选中情况
       emitT('choose-note', noteIndex)
@@ -332,7 +331,6 @@ const needReadPasswordMenu =  {
       const resData = res.data
       if (resData.respCode === 0) {
         autoUpdateFileList()
-
         //通知更新面板
         arg.encrypted = '1'
         emitT('choose-note', arg)
@@ -367,12 +365,11 @@ const itemRightClick = (event, item) => {
     if (item.encrypted === '0') {//无加密右击场景
       itemMenus.menus.push(needReadPasswordMenu)
       if (item.isFile === '1') { //文件场景需要copy,download. 文件夹不需要
-        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu)
+        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu, exportNoteMenu)
       }
     } else {
       itemMenus.menus.push(releaseReadPasswordMenu)
     }
-
     menusEvent(event, itemMenus, item)
   } else if (menuCompKeySelected === itemList.delFiles) {
     menusEvent(event, delItemMenus.value, item)
@@ -1057,6 +1054,66 @@ const copyPreviewAddrMenu =    {
     return true;
   }
 }
+
+const exportToPdfMenu = {
+  label: "导出pdf",
+  tip: 'pdf',
+  click: (menu, arg) => {
+    if (arg.isFile === '0') {
+      message.warning("不支持文件夹下载")
+      return true
+    }
+    const id = arg.id;
+    noteApi.exportPdf({noteId: id}).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        const downloadUrl = res.data.datas
+        window.open(downloadUrl)
+        message.success("导出成功")
+      }
+    }).catch(err => {
+      message.error("网络请求信息下载失败")
+      console.error(err)
+    })
+    return true;
+  }
+}
+
+const exportToDocxMenu = {
+  label: "导出docx",
+  tip: 'docx',
+  click: (menu, arg) => {
+    if (arg.isFile === '0') {
+      message.warning("不支持文件夹下载")
+      return true
+    }
+    const id = arg.id;
+    noteApi.exportDocx({noteId: id}).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        const downloadUrl = res.data.datas
+        window.open(downloadUrl)
+        message.success("导出成功")
+      }
+    }).catch(err => {
+      message.error("网络请求信息下载失败")
+      console.error(err)
+    })
+    return true;
+  }
+}
+
+//导出母菜单
+const exportNoteMenu =  {
+  label: "导出",
+  tip: 'export Note',
+  children: [
+    exportToPdfMenu,
+    exportToDocxMenu
+  ]
+}
+
+//下载笔记菜单选项
 const downloadNoteMenu = {
   label: "下载",
   tip: 'download',
@@ -1073,7 +1130,6 @@ const downloadNoteMenu = {
       message.warning("不支持Md,Wer文件下载")
       return true
     }
-
     const id = arg.id;
     noteApi.getNoteAndSite({id: id}).then(res => {
       const noteFile = res.data.datas.noteFile
@@ -1084,7 +1140,6 @@ const downloadNoteMenu = {
       message.error("网络请求信息下载失败")
       console.error(err)
     })
-
     return true;
   }
 }

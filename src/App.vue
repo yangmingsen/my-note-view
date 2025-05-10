@@ -31,28 +31,28 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(res => {
       // 2xx 范围内的状态码都会触发该函数。
       // 对响应数据做点什么
+      const resData = res.data
+      if (resData.respCode !== 0) {
+        const respMsg = resData.respMsg
+        message.error(respMsg);
+      }
       return res;
     },
     error => {
       // 超出 2xx 范围的状态码都会触发该函数。
       // 对响应错误做点什么
-      console.error(error)
       let status = error.response.status;
       if (status === 401) {
         message.error("登录异常.....")
-
         const username = localStorage.getItem(constansFlag.username)
         localStorage.clear();
         if (username !== undefined) {
           localStorage.setItem(constansFlag.username, username)
         }
-
         router.push('/login')
       }
-
       return Promise.reject(error);
-    });
-
+});
 
 onMounted(() => {
   const tokenKey = localStorage.getItem("token")
@@ -61,9 +61,7 @@ onMounted(() => {
   }
 })
 
-
 </script>
-
 
 <template>
   <RouterView />
