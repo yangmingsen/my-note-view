@@ -336,4 +336,13 @@ export const RemoteApi = {
         return await request.get(rurl+"/file/syncAll", params);
     },
 
+    //-------导出---------------
+    async exportPdf(params) {
+        return await request.get(rurl+"/export/pdf", params);
+    },
+
+    async exportDocx(params) {
+        return await request.get(rurl+"/export/docx", params);
+    },
+
 }

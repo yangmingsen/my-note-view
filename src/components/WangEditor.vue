@@ -55,6 +55,18 @@ notifySaveStore.$subscribe((mutation, state) => {
 const toolbarConfig = {}
 const editorConfig = {placeholder: '请输入内容...',  MENU_CONF: {}}
 const mode = ref('default') // 或 'simple'
+
+// const customPaste = (editor, event) => {
+//   const html = event.clipboardData.getData('text/html') // 获取粘贴的 html
+//
+//   const text = event.clipboardData.getData('text/plain') // 获取粘贴的纯文本
+//   // editor.dangerouslyInsertHtml(html)
+//
+//   // 阻止默认的粘贴行为
+//   // event.preventDefault()
+//   return true
+// }
+
 // 修改 uploadImage 菜单配置
 editorConfig.MENU_CONF['uploadImage'] = {
   server: constFlag.apiUrl+'/file/upload',

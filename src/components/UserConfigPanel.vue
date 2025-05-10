@@ -40,7 +40,8 @@
       </div>
     </a-tab-pane>
     <a-tab-pane class="user-config-panel" key="3" tab="设置">
-      <button @click="rebuildIndex">更新索引</button>
+      <a-spin v-if="waitSync"  tip="Loading..."></a-spin>
+      <button @click="rebuildIndex">重建索引</button>
       <button @click="syncLocalNote">同步本地笔记</button>
 
     </a-tab-pane>
@@ -150,14 +151,23 @@ const notifyOtherCompUpdate = () => {
 }
 
 const rebuildIndex = () => {
+  waitSync.value = true
   noteApi.indexRebuild().then(res => {
     const resData = res.data
     if (resData.respCode === 0) {
       message.success("成功..")
+    } else {
+      message.error("失败重建..")
     }
+    waitSync.value = false
+  }).catch(err => {
+    message.error("错误重建..")
+    console.error(err)
+    waitSync.value = false
   })
 }
 
+const waitSync = ref(false)
 const syncLocalNote = () => {
   noteApi.syncLocalNote().then(res => {
     const resData = res.data
