@@ -21,6 +21,7 @@ import {ref} from 'vue'
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useNotifyUpdateFileListStore} from "../store/useNotifyUpdateFileListStore";
 import {message} from "ant-design-vue";
+import {ConstansFlag as constansFlag} from "../js/ConstansFlag";
 
 
 const props = defineProps(['noteid'])
@@ -42,6 +43,8 @@ const doPassAuth = () => {
     if (resData.respCode === 0) {
       const noteIndex = resData.datas
       noteIndex.encrypted = '0'
+      const tmpToken = noteIndex.tmpToken
+      localStorage.setItem(constansFlag.tmpToken, tmpToken)
       emitT('choose-note', noteIndex)
     } else {
       if (showErrorTips.value === false) {

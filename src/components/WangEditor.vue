@@ -23,7 +23,7 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { message  } from 'ant-design-vue';
 import {RemoteApi as noteApi} from "../api/RemoteApi";
 import {hex_md5} from '../js/encryptionAlgorithm.js'
-import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
+import {ConstansFlag as constansFlag, ConstansFlag as constFlag} from '../js/ConstansFlag.js'
 import {useNotifySaveStore} from "../store/useNotifySaveStore";
 
 const props = defineProps(['noteid'])
@@ -172,7 +172,13 @@ const getTextContent = () => {
 }
 
 watch(() => props.noteid,  (noteidNew, noteidOld) => {
-  noteApi.noteContentGet({id: noteidNew}).then(res => {
+  const param = {id: noteidNew};
+  const tmpToken = localStorage.getItem(constansFlag.tmpToken);
+  if (tmpToken !== undefined && tmpToken !== null) {
+    param.tmpToken = tmpToken
+    localStorage.removeItem(constansFlag.tmpToken)
+  }
+  noteApi.noteContentGet(param).then(res => {
     if (noteidOld !== undefined) {
       const id = noteidOld
       const oldData = getCurContent()
