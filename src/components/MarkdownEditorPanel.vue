@@ -26,6 +26,8 @@ import {RemoteApi as noteApi} from "../api/RemoteApi"
 import {hex_md5} from '../js/encryptionAlgorithm.js'
 import {useNotifySaveStore} from "../store/useNotifySaveStore";
 
+import {ConstansFlag as constansFlag} from "../js/ConstansFlag";
+
 //props变量
 const props = defineProps(['noteid'])
 
@@ -64,7 +66,13 @@ onBeforeUnmount(() => {
 })
 
 watch(() => props.noteid, (noteidNew, noteidOld) => {
-  noteApi.noteContentGet({id: noteidNew}).then(res => {
+  const param = {id: noteidNew};
+  const tmpToken = localStorage.getItem(constansFlag.tmpToken);
+  if (tmpToken !== undefined && tmpToken !== null) {
+    param.tmpToken = tmpToken
+    localStorage.removeItem(constansFlag.tmpToken)
+  }
+  noteApi.noteContentGet(param).then(res => {
     if (noteidOld != undefined) {
       const id = noteidOld;
       const oldData = dataText.value;

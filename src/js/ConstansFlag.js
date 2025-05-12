@@ -6,6 +6,7 @@ export const ConstansFlag = {
         unknow: 'unknow', jpeg: 'jpeg', pdf: 'pdf', xlsx: 'xlsx', mindmap: 'mindmap'},
     username: 'username',
     userId: "userId",
-    token: 'token'
+    token: 'token',
+    tmpToken: 'tmpToken'
 
 }

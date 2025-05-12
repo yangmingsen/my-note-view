@@ -15,7 +15,8 @@ const props = defineProps(['noteid'])
 const previewText = ref('')
 
 watch(() => props.noteid, (noteidNew, noteidOld) => {
-  noteApi.noteContentGet({id: noteidNew}).then(res => {
+  const param = {id: noteidNew};
+  noteApi.noteContentGet(param).then(res => {
     const resData = res.data.datas
     previewText.value = resData.content
   }).catch(err => {
