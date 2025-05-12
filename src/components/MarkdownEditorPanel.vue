@@ -31,8 +31,6 @@ import {ConstansFlag as constansFlag} from "../js/ConstansFlag";
 //props变量
 const props = defineProps(['noteid'])
 
-
-
 const editorModeConst = {edit: 'edit', editable: 'editable', preview: 'preview'}
 //模式, 默认预览
 const editorMode = ref(editorModeConst.preview)
@@ -156,7 +154,7 @@ const saveContent = (info) => {
 
 //手动保存
 const manualSave = (text, html) => {
-  saveContent({id: props.noteid, content: text, op: 1})
+  //saveContent({id: props.noteid, content: text, op: 1})
 }
 
 //自动保存

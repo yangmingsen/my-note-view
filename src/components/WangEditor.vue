@@ -157,9 +157,6 @@ const handleCreated = (editor) => {
   editorRef.value = editor // 记录 editor 实例，重要！
 }
 
-
-
-
 const getCurContent = () => {
   const editor = editorRef.value
   const htmlContent = editor.getHtml()

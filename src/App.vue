@@ -33,8 +33,9 @@ axios.interceptors.response.use(res => {
       // 对响应数据做点什么
       const resData = res.data
       if (resData.respCode !== 0) {
+        const respCode = resData.respCode
         const respMsg = resData.respMsg
-        message.error(respMsg);
+        message.error(respCode+"-"+respMsg);
       }
       return res;
     },
