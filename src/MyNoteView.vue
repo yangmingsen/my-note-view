@@ -18,6 +18,7 @@ import {ref,  onMounted} from 'vue'
 import {message} from "ant-design-vue";
 import {useNotifySaveStore} from './store/useNotifySaveStore'
 import {userGlobalNotifyStore} from "./store/userGlobalNotifyStore";
+import ArchivePreview from "./components/ArchivePreview.vue";
 
 const notifySaveStore = useNotifySaveStore()
 
@@ -35,17 +36,27 @@ const mindMapNoteId = ref('')
 //needPasswordId 零时
 const needPasswordId = ref('')
 
+const archiveId = ref('')
+
 const fileType = constFlag.fileType
 
 const editorFlag = {
   markdwon: 0, wangEditor: 1,  blank: 2, notSupport: 3, img: 4,
-  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10, needPassword: 11
+  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10, needPassword: 11, archive: 12
 }
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
 
 //当前选中的父目录, 由FileList组件传入, 通知到MenuList组件
 const treeSelectKeys = ref('')
+
+//判断当前支持的压缩类型
+const checkSupportArchive = (curType, supportTypeList) => {
+  for (const st of supportTypeList) {
+    if (st === curType) return true;
+  }
+  return false;
+}
 
 //动态选择当前合适的预览或者编辑组件
 const chooseEditor = (info) => {
@@ -54,26 +65,19 @@ const chooseEditor = (info) => {
     showNoteTitleName.value = false
     return
   }
-
   //更新选中的父目录, 它会去更新menu组件的tree树
   if (treeSelectKeys.value !== info.parentId) {
     treeSelectKeys.value = info.parentId
   }
-
-
   const noteId = info.id
   noteTitleName.value = info.name //更新标题
   showNoteTitleName.value = true
-
   //加密拦截点
   if (info.encrypted === '1' && info.isFile === '1') {
-
     editorSelected.value = editorFlag.needPassword
     needPasswordId.value = noteId
     return
   }
-
-
   if (info.isFile === '0') {
     editorSelected.value = editorFlag.blank
     showNoteTitleName.value = false
@@ -102,6 +106,9 @@ const chooseEditor = (info) => {
     } else if (info.type === fileType.mindmap) {
       mindMapNoteId.value = noteId
       editorSelected.value = editorFlag.mindmap
+    } else if (checkSupportArchive(info.type, constFlag.archiveList)) {
+      archiveId.value = noteId
+      editorSelected.value = editorFlag.archive
     } else {
       noteApi.noteContentCanPreview({id: noteId}).then(res => {
         const data = res.data
@@ -305,6 +312,9 @@ const layoutImgFlag = ref(3)
                 :noteid="needPasswordId"
                 v-if="editorSelected === editorFlag.needPassword"></NeedPassword>
             <NotSupportEditor v-if="editorSelected === editorFlag.notSupport"></NotSupportEditor>
+            <ArchivePreview
+                :noteid="archiveId"
+                v-if="editorSelected === editorFlag.archive"></ArchivePreview>
           </div>
           <div class="content-scope-fun">
 <!--            <div class="content-fun">-->

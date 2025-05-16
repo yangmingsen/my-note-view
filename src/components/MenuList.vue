@@ -301,7 +301,6 @@ const loadData = () => {
     for (let i = 0; i < tmpNotes.length; i++) {
       treeData.value.push(tmpNotes[i]);
     }
-
     //默认展开root目录
     if (tmpNotes.length > 0) {
       const rootKey = tmpNotes[0].key
