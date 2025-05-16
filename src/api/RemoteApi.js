@@ -216,6 +216,15 @@ export const RemoteApi = {
         return await request.get(rurl+"/file/url2pdf", params);
     },
 
+    /**
+     * url转pdf
+     * @param params {url: xxx, parentId: xxx}
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async url2md(params) {
+        return await request.get(rurl+"/file/url2md", params);
+    },
+
 
     /**
      * 添加或更新笔记内容

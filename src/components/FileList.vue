@@ -227,6 +227,7 @@ const initLoadFileList = () => {
       //set lastVisit
       const lastVisit = userConfigObj.lastvisit
       if (lastVisit !== undefined) {
+        lastVisit.initFlag = true
         locationLastVisit(lastVisit)
       } else {
         locationDefault()
@@ -280,7 +281,11 @@ const locationLastVisit = (info) => {
       //通知tree组件更新选中情况
       emitT('choose-note', noteIndex)
       //更新当前选中
-      setFileSelectKey(id)
+      if (info.initFlag) {
+        setFileSelectKey2(id)
+      } else {
+        setFileSelectKey(id)
+      }
     }
   }).catch(err => {
     message.error("请求获取noteIndex错误")
@@ -399,9 +404,12 @@ const totalFileSize = ref(0)
 let fileSelectKey = ref('');
 const setFileSelectKey = (key) => {
   fileSelectKey.value = key
-
   //同步一次
   syncLastVisit()
+}
+//不同步
+const setFileSelectKey2 = (key) => {
+  fileSelectKey.value = key
 }
 const getFileSelectKey = () => {
   return fileSelectKey.value
@@ -895,11 +903,20 @@ const showInputModalConfirm = (info) => {
           if (resData.respCode === 0) {
             autoUpdateFileList()
             message.success("url2pdf成功")
-          } else {
-            message.error(`url2pdf转换失败: respCode=${resData.respCode}`)
           }
         }).catch(err => {
           message.error("url2pdf转换失败")
+          console.error(err)
+        })
+      } else if (info.opType === opType.url2md) {
+        noteApi.url2md({url: iptV, parentId: parentId}).then(res => {
+          const resData = res.data
+          if (resData.respCode === 0) {
+            autoUpdateFileList()
+            message.success("url2markdown成功")
+          }
+        }).catch(err => {
+          message.error("url2markdown转换失败")
           console.error(err)
         })
       } else if (info.opType === opType.encrypted) {
@@ -1146,7 +1163,7 @@ const downloadNoteMenu = {
 
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
-  destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8}
+  destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8, url2md: 9}
 //右击某个文件item的菜单 基础[新建笔记,新建目录,重命名,删除]
 const fileItemMenus = shallowRef({
   menus: [
@@ -1217,6 +1234,20 @@ const spaceMenus = shallowRef({
           title: 'url转pdf',
           content: '请输入url地址',
           opType: opType.url2pdf,
+          parentId: getDirSelectKey() //当前目录id
+        }
+        showInputModalConfirm(arg)
+        return true;
+      }
+    },
+    {
+      label: "url转markdown",
+      tip: 'newMarkdown',
+      click: () => {
+        const arg = {
+          title: 'url转markdown',
+          content: '请输入url地址',
+          opType: opType.url2md,
           parentId: getDirSelectKey() //当前目录id
         }
         showInputModalConfirm(arg)
@@ -1514,7 +1545,6 @@ onMounted(() => {
       xhr.send(formData);
     }
   });
-
   //搜索
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
