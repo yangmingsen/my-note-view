@@ -4,7 +4,7 @@
       <img src="../assets/avtar.png" @click="showUserConfigModal">
     </div>
     <!--    <p class="flush-tag"><a href="#">会员</a> | <a href="#">刷新</a></p>-->
-    <div class="new-content">+ 新文档</div>
+<!--    <div class="new-content">+ 新文档</div>-->
     <div class="item-li"
          @click="clickManualItem({id: itemList.recentVisit})"
          :class="itemSelected === itemList.recentVisit ? 'item-active' : ''"
@@ -234,6 +234,7 @@ const reloadDirAndFileList = (info) => {
 
 //目录选择时，key在兄弟组件之间的动态传递
 const selectStore = useSelectStore();
+
 //当前目录选中的key(也就是上次选中的目录)
 let curSelectKey = '';
 //当前鼠标点击某个tree节点时
