@@ -82,7 +82,7 @@
       <span>当前所在目录:</span>
       <a-breadcrumb v-if="menuSelected === itemList.treeFiles" >
         <a-breadcrumb-item v-for="item in breadcrumbList">
-          <a href="#">{{ item.name }}</a>
+          <a href="#" @click="clickBreadcrumb(item)">{{ item.name }}</a>
         </a-breadcrumb-item>
       </a-breadcrumb>
       <div v-if="menuSelected === itemList.recentVisit">
@@ -101,20 +101,39 @@
   <a-modal v-model:open="progressOpen" title="上传进度">
     <a-progress :percent="progressPercent" />
   </a-modal>
+  <!-- 移动笔记对话框  -->
+  <a-modal title="移动笔记" v-model:open="openMoveNoteModal" @ok="noteMoveOk">
+    <a-tree
+        class="draggable-tree"
+        draggable
+        block-node
+        :tree-data="dirTreeData"
+        @select="dirTreeLeftClick"
+    />
+  </a-modal>
 </template>
 
 <script setup>
-import {FilePdfTwoTone,FileMarkdownTwoTone,FileImageTwoTone,FolderTwoTone,FileWordTwoTone,
-  FilePptTwoTone,FileTextTwoTone,FileExcelTwoTone,FileTwoTone,FileUnknownTwoTone,
-  FileMarkdownOutlined, FolderOutlined, FileZipOutlined,LockTwoTone,
-  FileUnknownOutlined, FileOutlined, FileExcelOutlined, FileWordOutlined,
-  FilePptOutlined, FileImageOutlined, FileJpgOutlined, FilePdfOutlined,
-  PlusCircleOutlined, RollbackOutlined, UnorderedListOutlined,FileTextOutlined,FileGifOutlined,
-  BulbTwoTone
-
+import {
+  BulbTwoTone,
+  FileExcelTwoTone,
+  FileGifOutlined,
+  FileImageTwoTone,
+  FileJpgOutlined,
+  FileMarkdownTwoTone,
+  FilePdfTwoTone,
+  FilePptTwoTone,
+  FileTextTwoTone,
+  FileTwoTone,
+  FileUnknownTwoTone,
+  FileWordTwoTone,
+  FileZipOutlined,
+  FolderTwoTone,
+  LockTwoTone,
+  PlusCircleOutlined
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
-import {shallowRef, ref, createVNode, onMounted} from "vue";
+import {createVNode, onMounted, ref, shallowRef} from "vue";
 import {menusEvent} from 'vue3-menus';
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {useSelectStore} from "../store/useSelectStore";
@@ -613,6 +632,7 @@ const backParentDir = () => {
 
 //面包线列表数据
 const breadcrumbList = ref([])
+//更新面包屑
 const updateBreadcrumb = (info) => {
   noteApi.findBreadcrumb({id: info.id}).then(res => {
     const data = res.data.datas
@@ -624,6 +644,12 @@ const updateBreadcrumb = (info) => {
     message.error("获取面包线数据失败")
     console.error(err)
   })
+}
+//点击面包屑
+const clickBreadcrumb = (info) => {
+  dirSelectKey.value = info.id
+  autoUpdateFileList()
+  updateBreadcrumb(info)
 }
 
 //双击某个项目时
@@ -1071,7 +1097,6 @@ const copyPreviewAddrMenu =    {
     return true;
   }
 }
-
 const exportToPdfMenu = {
   label: "导出pdf",
   tip: 'pdf',
@@ -1095,7 +1120,6 @@ const exportToPdfMenu = {
     return true;
   }
 }
-
 const exportToDocxMenu = {
   label: "导出docx",
   tip: 'docx',
@@ -1116,6 +1140,16 @@ const exportToDocxMenu = {
       message.error("网络请求信息下载失败")
       console.error(err)
     })
+    return true;
+  }
+}
+//移动笔记
+const moveNoteMenu = {
+  label: "移动",
+  tip: 'move',
+  click: (menu, arg) => {
+    fromNoteId = arg.id
+    loadDirTree()
     return true;
   }
 }
@@ -1164,6 +1198,7 @@ const downloadNoteMenu = {
 //鼠标右击菜单
 const opType = {createNewFile: 0, createDir: 1, rename: 2, delNote: 3,
   destroy: 4,  allDestroy: 5, url2pdf: 6, encrypted: 7, unEncrypted: 8, url2md: 9}
+
 //右击某个文件item的菜单 基础[新建笔记,新建目录,重命名,删除]
 const fileItemMenus = shallowRef({
   menus: [
@@ -1177,6 +1212,7 @@ const fileItemMenus = shallowRef({
       ]
     },//1
     createDirMenu,
+    moveNoteMenu,
     {
       label: "重命名",
       tip: 'rename',
@@ -1203,6 +1239,7 @@ const fileItemMenus = shallowRef({
     }//3
   ]
 })
+
 //空白区域右击菜单列表
 const spaceMenus = shallowRef({
   menus: [
@@ -1566,6 +1603,65 @@ onMounted(() => {
   });
 
 })
+
+//笔记移动对话框变量
+const openMoveNoteModal = ref(false)
+//当前选中key
+let dirTreeSelectKey = ''
+let fromNoteId = ''
+//移动目录tree
+const dirTreeData = ref([])
+//加载数据
+const loadDirTree = () => {
+  noteApi.getAntNoteTree().then((res) => {
+    const resData = res.data
+    if (resData.respCode === 0) {
+      dirTreeData.value = []
+      for (let i = 0; i < resData.datas.length; i++) {
+        dirTreeData.value.push(resData.datas[i]);
+      }
+      openMoveNoteModal.value = true
+    }
+  }).catch(err => {
+    message.error("获取dir树失败")
+    console.error(err)
+  })
+}
+
+//更新当前选中的目录
+const dirTreeLeftClick = (key) => {
+  dirTreeSelectKey = key[0]
+  console.log("dirTreeSelectKey=", dirTreeSelectKey)
+}
+//移动对话框确认
+const noteMoveOk = (e) => {
+  if (dirTreeSelectKey === '' || dirTreeSelectKey === null) {
+    message.warn("未选择目标目录")
+    return
+  }
+  if (fromNoteId === '' || fromNoteId === null) {
+    message.warn("移动目标未选择")
+    return
+  }
+  const curSelectKey = dirTreeSelectKey
+  const fromNoteKey = fromNoteId
+  dirTreeSelectKey = null
+  fromNoteId = null
+  noteApi.noteMove({fromId: fromNoteKey, toId: curSelectKey}).then(res => {
+    const resData = res.data;
+    if (resData.respCode === 0) {
+      message.success("移动成功")
+      autoUpdateFileList()
+    } else {
+      message.error("移动失败...")
+    }
+    openMoveNoteModal.value = false
+  }).catch(err => {
+    message.error("移动错误")
+    console.error(err)
+    openMoveNoteModal.value = false
+  })
+}
 
 </script>
 
