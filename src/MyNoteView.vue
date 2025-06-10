@@ -40,10 +40,7 @@ const archiveId = ref('')
 
 const fileType = constFlag.fileType
 
-const editorFlag = {
-  markdwon: 0, wangEditor: 1,  blank: 2, notSupport: 3, img: 4,
-  pdf: 5, doc: 6, excel: 7, tiny: 8, textPreview: 9, mindmap: 10, needPassword: 11, archive: 12
-}
+const editorFlag = constFlag.editorFlag
 //当前选中的editor, 默认markdown
 const editorSelected = ref(editorFlag.blank)
 

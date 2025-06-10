@@ -354,4 +354,31 @@ export const RemoteApi = {
         return await request.get(rurl+"/export/docx", params);
     },
 
+    /**
+     * 分享关闭
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async shareNoteClose(params) {
+        return await request.get(rurl+"/note-index/share-close", params);
+    },
+
+    /**
+     * 分享开启
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async shareNoteOpen(params) {
+        return await request.get(rurl+"/note-index/share-open", params );
+    },
+
+    /**
+     * 特殊请求
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async shareNoteGet(params) {
+        return await request.get(ConstansFlag.devIpApiUrl+"/share/get", params );
+    },
+
 }

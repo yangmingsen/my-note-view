@@ -5,7 +5,10 @@ import {message} from 'ant-design-vue';
 import {onMounted} from 'vue'
 import {ConstansFlag as constansFlag} from "./js/ConstansFlag";
 
+//路由器
 const router = useRouter()
+//当前路由
+const route = useRoute()
 
 axios.interceptors.request.use(config => {
       const checkSession = () => {
@@ -18,7 +21,10 @@ axios.interceptors.request.use(config => {
           router.push('/login')
         }
       }
-      checkSession()
+      const pathname = window.location.pathname //获取路径部分（不含查询参数）
+      if (pathname.indexOf("share") === -1) {
+        checkSession()
+      }
 
       return config;
     }, error => {
@@ -56,9 +62,14 @@ axios.interceptors.response.use(res => {
 });
 
 onMounted(() => {
-  const tokenKey = localStorage.getItem("token")
-  if (tokenKey === null) {
-    router.push('/login')
+  const pathname = window.location.pathname //获取路径部分（不含查询参数）
+  if (pathname.indexOf("share")) {
+    router.push(pathname)
+  } else {
+    const tokenKey = localStorage.getItem("token")
+    if (tokenKey === null) {
+      router.push('/login')
+    }
   }
 })
 
