@@ -43,14 +43,15 @@ VMdEditor.use(githubTheme, {
 //----v-viewer 图片浏览组件
 import 'viewerjs/dist/viewer.css'
 import VueViewer from 'v-viewer'
-
-
 import { createRouter, createWebHistory } from 'vue-router'
 import MyNoteView from './MyNoteView.vue'
 import MyNoteLogin from './MyNoteLogin.vue'
+import ShareNoteView from './components/ShareNoteView.vue'
+
 const routes = [
     { path: '/',  name: 'home', component: MyNoteView },
     { path: '/login', name: 'login', component: MyNoteLogin },
+    { path: '/share/:noteId', name: 'share', component: ShareNoteView },
 ]
 const router = createRouter({
     history: createWebHistory(),

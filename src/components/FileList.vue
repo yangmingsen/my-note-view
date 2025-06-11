@@ -53,6 +53,7 @@
             <span class="item-name"> {{ item.name }}</span>
           </div>
           <div class="item-meta-info-encrypt">
+            <span v-if="item.share === '1'"><ShareAltOutlined /></span>
             <span v-if="item.encrypted === '1'"><LockTwoTone /></span>
           </div>
         </div>
@@ -130,7 +131,8 @@ import {
   FileZipOutlined,
   FolderTwoTone,
   LockTwoTone,
-  PlusCircleOutlined
+  PlusCircleOutlined,
+    ShareAltOutlined
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
 import {createVNode, onMounted, ref, shallowRef} from "vue";
@@ -346,6 +348,7 @@ const doReleaseReadPassword = (info) => {
   showInputModalConfirm(arg)
 }
 
+//阅读密码菜单
 const needReadPasswordMenu =  {
   label: "阅读密码",
   tip: 'encrypted',
@@ -365,16 +368,64 @@ const needReadPasswordMenu =  {
       message.error("网络请求加密笔记错误")
       console.error(err)
     })
-
     return true;
   }
 }
+
+//取消阅读密码菜单
 const releaseReadPasswordMenu = {
   label: "取消阅读密码",
   tip: 'UnEncrypted',
   click: (menu, arg) => {
     const id = arg.id;
     doReleaseReadPassword({id: id})
+    return true;
+  }
+}
+
+//开启分享
+const shareNoteOpenMenu = {
+  label: "分享",
+  tip: 'share',
+  click: (menu, arg) => {
+    //noteId
+    const id = arg.id
+    noteApi.shareNoteOpen({noteId: id}).then(res => {
+      const respData = res.data.datas
+      const shareUrl = respData.shareUrl
+      if (shareUrl !== undefined ) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          message.success("分享连接已存入剪切板")
+          autoUpdateFileList()
+        })
+      }
+    }).catch(err => {
+      message.error("分享异常")
+      console.error(err)
+    })
+    //分享
+    return true;
+  }
+}
+
+//关闭分享
+const shareNoteCloseMenu = {
+  label: "关闭分享",
+  tip: 'unShare',
+  click: (menu, arg) => {
+    //noteId
+    const id = arg.id
+    noteApi.shareNoteClose({noteId: id}).then(res => {
+      const respData = res.data
+      if (respData.respCode === 0) {
+        message.success("关闭分享成功")
+        autoUpdateFileList()
+      }
+    }).catch(err => {
+      message.error("关闭分享异常")
+      console.error(err)
+    })
+    //分享
     return true;
   }
 }
@@ -386,10 +437,13 @@ const itemRightClick = (event, item) => {
     for (let item of fileItemMenus.value.menus) {
       itemMenus.menus.push(item)
     }
+    if (item.share ==='1') { //分享，可以添加关闭分享按钮
+      itemMenus.menus.push(shareNoteCloseMenu)
+    }
     if (item.encrypted === '0') {//无加密右击场景
       itemMenus.menus.push(needReadPasswordMenu)
       if (item.isFile === '1') { //文件场景需要copy,download. 文件夹不需要
-        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu, exportNoteMenu)
+        itemMenus.menus.push(copyPreviewAddrMenu, downloadNoteMenu, exportNoteMenu, shareNoteOpenMenu)
       }
     } else {
       itemMenus.menus.push(releaseReadPasswordMenu)
