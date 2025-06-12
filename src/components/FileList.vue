@@ -1539,7 +1539,8 @@ const doDrop = (e, toTarget) => {
 const progressOpen = ref(false)
 const progressPercent =ref(0)
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 10MB in byte
+const MAX_FILE_SIZE = 999 * 1024 * 1024; // 999MB in byte
+
 onMounted(() => {
   document.getElementById('file-upload').addEventListener('change', function (event) {
     const file = event.target.files[0];
@@ -1552,7 +1553,7 @@ onMounted(() => {
       formData.append('file', file);
       formData.append('parentId', getDirSelectKey());
       const reqUrl = constFlag.apiUrl+'/file/uploadNote'
-
+      // create xhr req
       const xhr = new XMLHttpRequest();
       xhr.open('POST', reqUrl); // 替换成你的上传接口
       // 设置请求头并添加token
@@ -1560,14 +1561,12 @@ onMounted(() => {
       // 显示进度条
       progressOpen.value = true
       progressPercent.value = 0
-
       // 监听上传进度
       xhr.upload.onprogress = function(event) {
         if (event.lengthComputable) {
           progressPercent.value = (event.loaded / event.total) * 100;
         }
       };
-
       // 上传完成
       xhr.onload = function() {
         if (xhr.status === 200) {
@@ -1579,7 +1578,6 @@ onMounted(() => {
         progressOpen.value = false
         progressPercent.value = 0
       };
-
       // 发送文件
       xhr.send(formData);
     }
@@ -1596,6 +1594,7 @@ onMounted(() => {
     // dropArea.style.borderColor = 'blue';  // 改变边框颜色以指示可放置
     // event.dataTransfer.dropEffect = 'copy';  // 显示"复制"效果
   });
+
   dropArea.addEventListener('drop', function(event) {
     event.preventDefault();
     let files = event.dataTransfer.files;
@@ -1604,7 +1603,7 @@ onMounted(() => {
       const formData = new FormData();
       formData.append('parentId', getDirSelectKey());
       formData.append('file', files[0]);
-
+      //创建xhr请求
       const xhr = new XMLHttpRequest();
       xhr.open('POST', constFlag.apiUrl+"/file/uploadNote"); // 替换成你的上传接口
       // 设置请求头并添加token
@@ -1612,30 +1611,41 @@ onMounted(() => {
       // 显示进度条
       progressOpen.value = true
       progressPercent.value = 0
-
       // 监听上传进度
       xhr.upload.onprogress = function(event) {
         if (event.lengthComputable) {
           progressPercent.value = (event.loaded / event.total) * 100;
         }
       };
-
       // 上传完成
       xhr.onload = function() {
         if (xhr.status === 200) {
-          message.success("上传成功")
-          autoUpdateFileList()
+          //响应码
+          try {
+            const response = JSON.parse(xhr.responseText);
+            console.log(response)
+            if (response.respCode === 0) {
+              message.success("上传成功")
+              autoUpdateFileList()
+            } else {
+              // 业务失败
+              message.error("上传失败：" + response.respMsg);
+            }
+          } catch (e) {
+            message.error("响应解析失败");
+            console.error("JSON 解析异常：", e);
+          }
         } else {
-          message.error("drop文件上传失败")
+          message.error("上传失败，状态码：" + xhr.status);
         }
         progressOpen.value = false
         progressPercent.value = 0
       };
-
       // 发送文件
       xhr.send(formData);
     }
   });
+
   //搜索
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -1644,6 +1654,7 @@ onMounted(() => {
       setTimeout(() => searchModal.style.display = 'none', 300);
     }
   });
+
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'k') {
       e.preventDefault();

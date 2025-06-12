@@ -377,8 +377,8 @@ export const RemoteApi = {
      * @param params
      * @returns {Promise<AxiosResponse<any>>}
      */
-    async shareNoteGet(params) {
-        return await request.get(ConstansFlag.devIpApiUrl+"/share/get", params );
+    async shareNoteGet(url, params) {
+        return await request.get(url+"/share/get", params );
     },
 
 }

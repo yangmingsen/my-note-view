@@ -36,20 +36,36 @@ const noteContent = ref('')
 //当前笔记类型
 const showType = ref('')
 
-const canShowSuffix = 'txt,cpp,txt,java,xml,go,html,css,js,ts,vue,json,c,scala,yml,cpp,py,bash,conf,ini,sql,cnf,iml,.gitignore'
+const canShowSuffix = 'cpp,txt,java,xml,go,html,css,js,ts,vue,json,c,scala,yml,cpp,py,bash,conf,ini,sql,cnf,iml,.gitignore'
 
 const canShow = (curType) => {
   const c = canShowSuffix.indexOf(curType)
-  if (c) {
+  if (c >= 0) {
     return true
   } else {
     return false
   }
 }
 
+const getReqUrl = () => {
+  const hostname = window.location.hostname
+  const port = window.location.port
+  let realPort = undefined
+  if (port === 5173 || port === '5173') {
+    realPort = '9103' //dev port
+  }
+  if (port === 9090 || port === '9090') {
+    realPort = '9003' // prov port
+  }
+  const reqUrl = `http://${hostname}:${realPort}/note`
+  // console.log(reqUrl)
+  return reqUrl
+}
+
 //加载数据
 const loadNoteData = () => {
-  noteApi.shareNoteGet({noteId: noteId}).then(res => {
+  const reqUrl = getReqUrl()
+  noteApi.shareNoteGet(reqUrl, {noteId: noteId}).then(res => {
     const respData = res.data.datas
     if ( respData ) {
       noteMeta = respData.noteIndex
