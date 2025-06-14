@@ -59,7 +59,7 @@
         </div>
         <div>
           <span class="item-info-tip">{{item.createTime}}</span>
-          <span class="item-info-tip" v-if="item.isFile === '0'"></span>
+          <span class="item-info-tip" v-if="item.isFile === '3'"></span>
           <span class="item-info-tip" v-else-if="item.size > 1048576">&nbsp;&nbsp;&nbsp;{{(item.size / 1048576).toFixed(2)}}MB</span>
           <span class="item-info-tip" v-else-if="item.size > 1024">&nbsp;&nbsp;&nbsp;{{(item.size / 1024).toFixed(2)}}KB</span>
           <span class="item-info-tip" v-else>&nbsp;&nbsp;&nbsp;{{item.size}}B</span>
@@ -400,7 +400,7 @@ const shareNoteOpenMenu = {
         })
       }
     }).catch(err => {
-      message.error("分享异常")
+      // message.error("分享异常")
       console.error(err)
     })
     //分享
@@ -422,7 +422,7 @@ const shareNoteCloseMenu = {
         autoUpdateFileList()
       }
     }).catch(err => {
-      message.error("关闭分享异常")
+      // message.error("关闭分享异常")
       console.error(err)
     })
     //分享
