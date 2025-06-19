@@ -8,16 +8,25 @@
           v-if="showType === editorFlag.markdwon"
           :text="noteContent"
       ></v-md-preview>
+      <Editor
+          v-if="showType === editorFlag.wangEditor"
+          style="height: 95vh; overflow-y: hidden;"
+          v-model="noteContent"
+          :defaultConfig="editorConfig"
+          :mode="mode"
+          @onCreated="handleCreated"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import {useRoute, useRouter} from 'vue-router'
-import {onMounted, ref} from "vue";
+import {onMounted, ref, shallowRef} from "vue";
 import {RemoteApi as noteApi} from '../api/RemoteApi'
 import {message} from "ant-design-vue";
 import {ConstansFlag as constFlag} from '../js/ConstansFlag.js'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 const editorFlag = constFlag.editorFlag
 
@@ -79,6 +88,9 @@ const loadNoteData = () => {
       if (canShow(curNoteType)) {
         showType.value = editorFlag.markdwon
       }
+      if (curNoteType === constFlag.fileType.wer) {
+        showType.value = editorFlag.wangEditor
+      }
     }
   }).catch(err => {
     // message.error("获取分享数据失败")
@@ -98,6 +110,19 @@ const setContainerHeight = () => {
 onMounted(() => {
   setContainerHeight()
 })
+
+//wang editor
+const editorConfig = {placeholder: '',  MENU_CONF: {},  readOnly: true}
+
+const mode = ref('simple') // 或 'simple' / 'default'
+
+// 编辑器实例，必须用 shallowRef
+const editorRef = shallowRef()
+
+const handleCreated = (editor) => {
+  editorRef.value = editor // 记录 editor 实例，重要！
+}
+
 
 </script>
 
