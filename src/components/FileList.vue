@@ -68,7 +68,7 @@
     </div>
 
     <!-- 文件上传-->
-    <input type="file" id="file-upload" style="display: none; position: absolute;">
+    <input type="file" id="file-upload" style="display: none; position: absolute;" webkitdirectory multiple  />
     <!-- 搜索框-->
     <div id="search-modal" class="search-modal">
       <input type="text" v-model="keyword" id="search-input" @input="searchEvent"  placeholder="Search...">
@@ -1541,7 +1541,61 @@ const progressPercent =ref(0)
 
 const MAX_FILE_SIZE = 999 * 1024 * 1024; // 999MB in byte
 
+
+const uploadToServer = (formData, url) => {
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', constFlag.apiUrl + url);
+  xhr.setRequestHeader('Authorization', localStorage.getItem("token"));
+
+  progressOpen.value = true;
+  progressPercent.value = 0;
+
+  xhr.upload.onprogress = function(event) {
+    if (event.lengthComputable) {
+      progressPercent.value = (event.loaded / event.total) * 100;
+    }
+  };
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      message.success("上传成功");
+      autoUpdateFileList();
+    } else {
+      message.error("上传失败");
+    }
+    progressOpen.value = false;
+    progressPercent.value = 0;
+  };
+
+  xhr.send(formData);
+}
+
+
 onMounted(() => {
+  document.getElementById('file-upload').addEventListener('change', function(event) {
+    let files = event.target.files;
+    if (!files || files.length === 0) return;
+    console.log("选中文件数：", files.length);
+    console.log("第一个文件路径：", files[0].webkitRelativePath); // ✅ 这时才会有值
+    const parentId = getDirSelectKey();
+    const formData = new FormData();
+    formData.append("parentId", parentId);
+
+    if (files.length === 1 && !files[0].webkitRelativePath) {
+      // 👉 单文件上传
+      formData.append("file", files[0]);
+      uploadToServer(formData, "/file/uploadNote");
+    } else {
+      // 👉 文件夹上传 or 多文件上传（带路径）
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]); // 多个文件字段名为 "files"
+      }
+      uploadToServer(formData, "/file/uploadMultiNote"); // 新的后端接口
+    }
+  });
+
+
+  /*
   document.getElementById('file-upload').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file) {
@@ -1582,6 +1636,7 @@ onMounted(() => {
       xhr.send(formData);
     }
   });
+*/
 
   //初始化内容
   initLoadFileList()
