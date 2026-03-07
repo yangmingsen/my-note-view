@@ -63,6 +63,7 @@
           <span class="item-info-tip" v-else-if="item.size > 1048576">&nbsp;&nbsp;&nbsp;{{(item.size / 1048576).toFixed(2)}}MB</span>
           <span class="item-info-tip" v-else-if="item.size > 1024">&nbsp;&nbsp;&nbsp;{{(item.size / 1024).toFixed(2)}}KB</span>
           <span class="item-info-tip" v-else>&nbsp;&nbsp;&nbsp;{{item.size}}B</span>
+          <span v-if="item.star === '1'">&nbsp;&nbsp;<StarTwoTone /></span>
         </div>
       </div>
     </div>
@@ -132,7 +133,8 @@ import {
   FolderTwoTone,
   LockTwoTone,
   PlusCircleOutlined,
-    ShareAltOutlined
+    ShareAltOutlined,
+  StarTwoTone
 } from '@ant-design/icons-vue';
 import {message, Modal} from 'ant-design-vue';
 import {createVNode, onMounted, ref, shallowRef} from "vue";
@@ -151,6 +153,8 @@ const showModel = ref(showModelFlag.fileListModel)
 
 //搜索关键字。 搜索功能实现
 const keyword = ref('')
+//上次搜索关键字
+let lastSearchKeyWord = ''
 let timer = null
 let keyLen = false
 const searchEvent = () => {
@@ -214,6 +218,7 @@ const sugliClick = (info) => {
   //关闭显示
   document.getElementById('search-modal').style.display = 'none';
   //clear search keyword
+  lastSearchKeyWord = keyword.value
   keyword.value = ''
   suggestionsList.value = []
 }
@@ -1208,6 +1213,50 @@ const moveNoteMenu = {
   }
 }
 
+const addStar = {
+  label: "加星",
+  tip: 'addStar',
+  click: (menu, arg) => {
+    const submitData = {id: arg.id, star: '1'}
+    noteApi.update(submitData).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        message.success("操作成功")
+        autoUpdateFileList()
+      } else {
+        message.warning("操作失败")
+        console.error(res)
+      }
+    }).catch(err => {
+      message.warning("操作错误")
+      console.error(err)
+    })
+    return true;
+  }
+}
+
+const unStar = {
+  label: "取消加星",
+  tip: 'unStar',
+  click: (menu, arg) => {
+    const submitData = {id: arg.id, star: '0'}
+    noteApi.update(submitData).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        message.success("操作成功")
+        autoUpdateFileList()
+      } else {
+        message.warning("操作失败")
+        console.error(res)
+      }
+    }).catch(err => {
+      message.warning("操作错误")
+      console.error(err)
+    })
+    return true;
+  }
+}
+
 //导出母菜单
 const exportNoteMenu =  {
   label: "导出",
@@ -1267,6 +1316,8 @@ const fileItemMenus = shallowRef({
     },//1
     createDirMenu,
     moveNoteMenu,
+    addStar,
+    unStar,
     {
       label: "重命名",
       tip: 'rename',
