@@ -19,6 +19,7 @@ import {message} from "ant-design-vue";
 import {useNotifySaveStore} from './store/useNotifySaveStore'
 import {userGlobalNotifyStore} from "./store/userGlobalNotifyStore";
 import ArchivePreview from "./components/ArchivePreview.vue";
+import LocalSoftwareSupportEditor from "./components/LocalSoftwareSupportEditor.vue";
 
 const notifySaveStore = useNotifySaveStore()
 
@@ -92,14 +93,27 @@ const chooseEditor = (info) => {
       imgNoteId.value = noteId
       editorSelected.value = editorFlag.img
     } else if(info.type === fileType.pdf) {
-      pdfNoteId.value = noteId
-      editorSelected.value = editorFlag.pdf
+      if (checkCanView(info)) { //如果前端组件可以预览
+        pdfNoteId.value = noteId
+        editorSelected.value = editorFlag.pdf
+      } else {
+        localSoftOpenSupport({noteId: noteId})
+      }
     } else if (info.type === fileType.docx) {
-      wordNoteId.value = noteId
-      editorSelected.value = editorFlag.doc
+      if (checkCanView(info)) { //如果前端组件可以预览
+        wordNoteId.value = noteId
+        editorSelected.value = editorFlag.doc
+      } else {
+        localSoftOpenSupport({noteId: noteId})
+      }
+
     } else if (info.type === fileType.xlsx) {
-      excelNoteId.value = noteId
-      editorSelected.value = editorFlag.excel
+      if (checkCanView(info)) { //如果前端组件可以预览
+        excelNoteId.value = noteId
+        editorSelected.value = editorFlag.excel
+      } else {
+        localSoftOpenSupport({noteId: noteId})
+      }
     } else if (info.type === fileType.mindmap) {
       mindMapNoteId.value = noteId
       editorSelected.value = editorFlag.mindmap
@@ -110,8 +124,14 @@ const chooseEditor = (info) => {
       noteApi.noteContentCanPreview({id: noteId}).then(res => {
         const data = res.data
         if (data.success === true) {
-          textNoteId.value = noteId
-          editorSelected.value = editorFlag.textPreview
+          if (data.datas.viewType === constFlag.notePreviewType.txt) {
+            textNoteId.value = noteId
+            editorSelected.value = editorFlag.textPreview
+          } else if (data.datas.viewType === constFlag.notePreviewType.localSoftware) {
+            localSoftOpenSupport({noteId: noteId})
+          } else {
+            editorSelected.value = editorFlag.notSupport
+          }
           return
         }
         editorSelected.value = editorFlag.notSupport
@@ -120,6 +140,40 @@ const chooseEditor = (info) => {
       })
     }
   }
+}
+
+/**
+ * 使用本地软件支持预览
+ * @param params
+ */
+const localSoftOpenSupport = (params) => {
+  noteApi.localOpenFile({id: params.noteId}).then(res2 => {
+    const data2 = res2.data
+    if (data2.success === true) {
+      message.success("使用本地软件打开成功")
+      editorSelected.value = editorFlag.localSoftwareEditor
+    } else {
+      message.error("无法使用本地软件打开该笔记")
+      editorSelected.value = editorFlag.notSupport
+    }
+  }).catch(err2 => {
+    message.error("未知异常")
+    editorSelected.value = editorFlag.notSupport
+  })
+}
+
+/**
+ * 检查前端组件是否可以预览
+ * @param params
+ * @returns {boolean}
+ */
+const checkCanView = (params) => {
+  const maxPreviewSize = 5*1024*1024
+  const noteSize = params.size
+  if (noteSize > maxPreviewSize) {
+    return false
+  }
+  return true
 }
 
 //标题显示
@@ -312,6 +366,7 @@ const layoutImgFlag = ref(3)
             <ArchivePreview
                 :noteid="archiveId"
                 v-if="editorSelected === editorFlag.archive"></ArchivePreview>
+            <LocalSoftwareSupportEditor v-if="editorSelected === editorFlag.localSoftwareEditor"></LocalSoftwareSupportEditor>
           </div>
           <div class="content-scope-fun">
 <!--            <div class="content-fun">-->

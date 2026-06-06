@@ -1235,6 +1235,7 @@ const addStar = {
   }
 }
 
+//取消加星
 const unStar = {
   label: "取消加星",
   tip: 'unStar',
@@ -1245,6 +1246,28 @@ const unStar = {
       if (resData.respCode === 0) {
         message.success("操作成功")
         autoUpdateFileList()
+      } else {
+        message.warning("操作失败")
+        console.error(res)
+      }
+    }).catch(err => {
+      message.warning("操作错误")
+      console.error(err)
+    })
+    return true;
+  }
+}
+
+//本地软件支援打开笔记
+const localSoftwareSupportOpenNote = {
+  label: "本地软件打开",
+  tip: 'localOpen',
+  click: (menu, arg) => {
+    const submitData = {id: arg.id}
+    noteApi.localOpenFile(submitData).then(res => {
+      const resData = res.data
+      if (resData.respCode === 0) {
+        message.success("操作成功")
       } else {
         message.warning("操作失败")
         console.error(res)
@@ -1318,6 +1341,7 @@ const fileItemMenus = shallowRef({
     moveNoteMenu,
     addStar,
     unStar,
+    localSoftwareSupportOpenNote,
     {
       label: "重命名",
       tip: 'rename',

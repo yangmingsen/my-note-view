@@ -381,4 +381,14 @@ export const RemoteApi = {
         return await request.get(url+"/share/get", params );
     },
 
+
+    /**
+     * 请求本地软件打开该笔记
+     * @param params
+     * @returns {Promise<AxiosResponse<any>>}
+     */
+    async localOpenFile(params) {
+        return await request.get(rurl+"/thirdService/openFile", params);
+    },
+
 }
